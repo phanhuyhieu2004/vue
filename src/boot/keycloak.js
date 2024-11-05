@@ -10,7 +10,8 @@ export default boot(({ app /* , store } */ }) => {
       config.headers.Authorization = `Bearer ${app.config.globalProperties.$keycloak.token}`;
       return config;
     }, null, {synchronous: true})
-    localStorage.setItem('token', app.config.globalProperties.$keycloak.token)
+    localStorage.setItem('token', app.config.globalProperties.$keycloak.token);
+    window.location.replace('/#');
   }
 
   return new Promise(resolve => {
