@@ -1,0 +1,135 @@
+.comment-session{
+  width: 1170px;
+  height: auto;
+  margin: 50px auto;
+  max-width: calc(100% - 20px);
+}
+.comment-box,
+.post-comment .list{
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 2px 2px #0002;
+}
+
+.settings-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.comment-options{
+  display: inline;
+  position: absolute;
+  top: 0;
+  right: 30px;
+}
+.fa-solid.fa-gear{
+  color: black;
+}
+.dropdown-menu {
+  position: absolute;
+  background-color: white;
+  border: 1px solid #ccc;
+  padding: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+}
+
+.dropdown-menu button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px 10px;
+  display: block;
+  width: 100%;
+  text-align: left;
+  color: black;
+}
+
+.dropdown-menu button:hover {
+  background-color: #f0f0f0;
+}
+
+.post-comment .list{
+  position: relative;
+  transition: 0.5s;
+  width: 100%;
+  margin-bottom: 12px;
+}
+.post-comment .list:hover{
+  transform: translateY(-10px);
+
+}
+.post-comment .list .user{
+  display: flex;
+  padding: 8px;
+  overflow: hidden;
+}
+.post-comment .list .user img{
+  height: 38px;
+  width: 38px;
+  margin-right: 10px;
+  border-radius: 50%;
+}
+.comment-session .name{
+  text-transform: uppercase;
+  font-weight: 500;
+}
+.post-comment .list .day{
+  font-size: 12px;
+}
+.post-comment .comment-post{
+  padding: 0 0 15px 58px;
+}
+.comment-box{
+  padding: 10px;
+  overflow: hidden;
+}
+.q-avatar.bg-red.text-white.q-chip--colored{
+  margin: 0 10px;
+}
+.comment-box .user{
+  display: flex;
+  width: min-content;
+}
+.comment-box .image img{
+  width: 24px;
+  height: 24px;
+  margin-right: 10px;
+  border-radius: 50%;
+}
+.comment-box textarea{
+  width: 100%;
+  background: #fff;
+  height: 152px;
+  margin: 10px 0;
+  padding: 10px;
+  resize: inherit;
+  border-radius: 5px;
+  border: none;
+  box-shadow: 0 0 0 1px #0003;
+}
+.comment-box textarea:focus-visible{
+  box-shadow:  inset 0 0 0 1px #009cff;
+  outline: none;
+
+}
+.comment-box .comment-submit{
+  float: right;
+  padding: 6px 10px;
+  border: none;
+  background-color: #0093E9;
+  background-image: linear-gradient(160deg, #0093E9 0%, #80D0C7 100%);
+
+  color: #eee;
+  cursor:pointer;
+  border-radius: 3px;
+}
+.comment-box .comment-submit:hover{
+  background: #0076bf;
+}
+@media (max-width: 660px) {
+  .comment-session{
+    width: 100%;
+  }
+
+}
