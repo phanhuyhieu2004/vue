@@ -21,7 +21,7 @@
             <div class="comment-post">
               <span v-if="!isEditing[comment._id]" style="padding: 20px">{{ comment.content }}</span>
               <div class="comment-updated">
-                <q-input v-if="isEditing[comment._id]" v-model="editContent[comment._id]" placeholder="Edit comments..."
+                <q-input v-if="isEditing[comment._id]" v-model="editContent[comment._id]"
                          type="text" :dense="dense"/>
                 <q-btn v-if="isEditing[comment._id]" @click="updateComment(comment._id)"
                        label="Confirm correction"></q-btn>
@@ -114,7 +114,7 @@ export default {
     toggleEdit(commentId) {
       this.isEditing[commentId] = !this.isEditing[commentId];
       if (this.isEditing[commentId]) {
-        this.editContent[commentId] = this.comments.find(c => c._id === commentId).data.content;
+        this.editContent[commentId] = this.comments.find(c => c._id === commentId).content;
       }
       console.log("trạng thái edit", this.isEditing);
     },
@@ -135,7 +135,7 @@ export default {
 
         const updatedCommentIndex = this.comments.findIndex(c => c._id === commentId);
         if (updatedCommentIndex !== -1) {
-          this.comments[updatedCommentIndex].data.content = this.editContent[commentId];
+          this.comments[updatedCommentIndex].content = this.editContent[commentId];
         }
         this.isEditing[commentId] = false;
       } catch (error) {
