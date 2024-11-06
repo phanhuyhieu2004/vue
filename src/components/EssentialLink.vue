@@ -1,48 +1,23 @@
 <template>
-  <q-item
-    clickable
-    tag="a"
-    target="_blank"
-    :href="props.link"
-  >
-    <q-item-section
-      v-if="props.icon"
-      avatar
-    >
-      <q-icon :name="props.icon" />
-    </q-item-section>
-
-    <q-item-section>
-      <q-item-label>{{ props.title }}</q-item-label>
-      <q-item-label caption>{{ props.caption }}</q-item-label>
-    </q-item-section>
-  </q-item>
+  <li v-for="(item, index) in items" :key="index">
+    {{ index }} - {{ item.message }}
+  </li>
 </template>
 
 <script setup>
-defineOptions({
-  name: 'EssentialLink'
-})
-
-const props = defineProps({
-  title: {
-    type: String,
-    required: true
-  },
-
-  caption: {
-    type: String,
-    default: ''
-  },
-
-  link: {
-    type: String,
-    default: '#'
-  },
-
-  icon: {
-    type: String,
-    default: ''
-  }
-})
+import {ref} from "vue";
+//
+// export default {
+//   name: 'CommentComponent',
+//   data() {
+//     return {
+//       comment: '',
+//       comments: [],
+//       isEditing: {},
+//       editContent: {},
+//       items: [{message: 'Foo'}, {message: 'Bar'}]
+//     }
+//   },
+// }
+const items=ref([{message: 'Foo'}, {message: 'Bar'}])
 </script>
