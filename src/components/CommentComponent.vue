@@ -2,7 +2,22 @@
   <div>
     <div class="comment-session">
       <h3>Comment App</h3>
+      <div class="q-pa-md row justify-center">
+        <div style="width: 100%; max-width: 400px">
 
+
+
+          <q-chat-message
+            name="Jane"
+            avatar="https://cdn.quasar.dev/img/avatar3.jpg"
+            :text="['doing fine, how r you?']"
+            stamp="4 minutes ago"
+
+          />
+          <i class="fa-solid fa-gear" ></i>
+
+        </div>
+      </div>
       <div class="comments-list">
         <div v-if="comments.length === 0">There are no comments yet.</div>
 
@@ -27,7 +42,7 @@
                        label="Confirm correction"></q-btn>
               </div>
               <q-btn label=" " style="display: inline; position: absolute; top: 0; right: 30px;">
-                <i class="fa-solid fa-gear" style="color:#fff;"></i>
+                <i class="fa-solid fa-gear"></i>
                 <q-menu>
                   <q-list style="min-width: 100px">
                     <q-item clickable v-close-popup @click="toggleEdit(comment._id)">

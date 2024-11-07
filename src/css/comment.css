@@ -5,9 +5,13 @@
   max-width: calc(100% - 20px);
 }
 .q-btn{
-  background-color: #0093E9;
-  background-image: linear-gradient(160deg, #0093E9 0%, #80D0C7 100%);
-color: #fff;
+  background: transparent;
+}
+.q-btn.q-btn-item.non-selectable.no-outline.q-btn--standard.q-btn--rectangle.q-btn--actionable.q-focusable.q-hoverable :hover{
+  background: none !important;
+}
+.q-btn:hover{
+  background: transparent !important;
 }
 .q-avatar {
 margin: 0 10px;
@@ -86,6 +90,24 @@ margin: 0 10px;
   gap: 10px;
   padding: 15px;
 
+}
+.q-btn::before {
+  content: "";
+  display: block;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  border-radius: inherit;
+  box-shadow: none !important;
+}
+.q-message-text {
+  background: currentColor;
+  padding: 20px;
+  line-height: 1.2;
+  word-break: break-word;
+  position: relative;
 }
 .comment-session .name{
   text-transform: uppercase;
