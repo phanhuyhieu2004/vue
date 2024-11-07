@@ -14,8 +14,9 @@ module.exports = configure(function (/* ctx */) {
             {
               name: "masterApp",
               remotes: {
-                commentApp: "commentApp@http://localhost:4300/remoteEntry.js", // Kết nối với comment module
+                commentApp: "commentApp@http://localhost:8082/remoteEntry.js",
               },
+              // Cấu hình ứng dụng con (remote) có tên là commentApp, với file entry là "remoteEntry.js". Khi cần tải module từ commentApp, Webpack sẽ tìm ở địa chỉ http://localhost:4300/remoteEntry.js.
               shared: {
                 vue: {
                   singleton: true,
