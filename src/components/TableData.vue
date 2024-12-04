@@ -1,151 +1,1407 @@
 <template>
-  <div class="container">
-    <div class="q-gutter-md row items-start">
-      <p style="padding: 10px">Số lượng {{ total }}</p>
-      <q-btn color="yellow" icon="arrow_back" @click="handleCancel">
-        <q-tooltip class="bg-indigo" :offset="[10, 10]">
-          Quay lại
-        </q-tooltip>
 
-      </q-btn>
-      <q-btn color="green" icon="add" @click="openDialog">
-        <q-tooltip class="bg-indigo" :offset="[10, 10]">
-          Thêm
-        </q-tooltip>
+  <q-layout>
+    <q-page-container>
+      <q-page>
+        <div class="q-pa-md q-gutter-sm">
+          <div class="row items-center header-contaniner">
+            <!-- Bên trái -->
+            <div class="row items-center col-auto header-col-1">
+              <!-- Thanh dọc -->
+              <q-separator
+                vertical
+                class="bg-primary"
+                style="height: 50px; width: 3px; margin-right: 16px"
+              />
+              <!-- Tiêu đề -->
+              <span class="title-header text-h6 ">Danh sách link mạng</span>
+            </div>
 
-      </q-btn>
-      <q-btn color="primary" icon="search" @click="search=true">
-        <q-tooltip class="bg-indigo" :offset="[10, 10]">
-          Lọc
-        </q-tooltip>
-
-      </q-btn>
-      <q-dialog v-model="search">
-        <q-card>
-          <q-card-section>
-            <q-form>
-              <div class="column q-pa-sm">
-                <div class="row justify-between q-mb-sm">
-                  <div class="q-ml-sm flex" style="color: black; align-items: center;font-weight: 700;">
-                    Tên link mạng
-                  </div>
-
-                  <q-select
-                    class="q-ml-sm select-filter no-border"
-                    outlined
-                    dense
-                    v-model="filterTypeLink"
-                    :options="options"
-
-                    emit-value
-                    map-options
-                  />
-
-                </div>
+            <!-- Bên phải -->
+            <div class="row items-center justify-end col header-col-2">
+              <!-- Nút lọc -->
+              <q-btn
+                flat
+                round
+                icon="filter_list"
+                @click="search = true"
+                class="q-mr-sm"
+              >
+                <q-tooltip class="bg-indigo" :offset="[10, 10]">Lọc</q-tooltip>
+              </q-btn>
 
 
-                <div class="row">
-                  <q-input
-                    class="col-md-6"
-                    filled
-                    v-model="searchValue"
-                    label="Nhập tên link mạng"
-                    clearable
+              <q-btn
+                icon="search"
+                @click="toggleSearchBox"
+                class="q-mr-sm"
+                round
+                flat
+
+              />
+
+              <!-- Quasar Input chỉ hiển thị khi isSearchOpen là true -->
+              <q-input
+                v-if="isSearchOpen"
+                ref="searchInput"
+                v-model="searchValues"
+                placeholder="Tìm kiếm theo"
+
+                debounce="300"
+                @change="searchNetworks"
+                class="search-input"
+              >
+                <template v-slot:append>
+                  <q-icon name="close" @click="toggleSearchBox"/>
+                </template>
+              </q-input>
+              <!-- Nút cài đặt -->
+              <q-btn flat round icon="settings" class="q-mr-sm">
+                <q-tooltip class="bg-indigo">Cài đặt</q-tooltip>
+              </q-btn>
+              <!-- Dropdown thêm mới -->
+              <q-btn-dropdown
+                style="width: 150px"
+                color="primary"
+                split
+                icon="add"
+                label="Thêm mới"
+                @click="openDialog"
+              >
+                <q-list>
+                  <q-item clickable v-close-popup>
+                    <q-item-section avatar>
+                      <q-avatar icon="folder" color="primary" text-color="white"/>
+                    </q-item-section>
+                    <q-item-section>
+                      <q-item-label>Photos</q-item-label>
+                      <q-item-label caption>February 22, 2016</q-item-label>
+                    </q-item-section>
+                    <q-item-section side>
+                      <q-icon name="info" color="amber"/>
+                    </q-item-section>
+                  </q-item>
+
+                  <q-item clickable v-close-popup>
+                    <q-item-section avatar>
+                      <q-avatar
+                        icon="assignment"
+                        color="secondary"
+                        text-color="white"
+                      />
+                    </q-item-section>
+                    <q-item-section>
+                      <q-item-label>Vacation</q-item-label>
+                      <q-item-label caption>February 22, 2016</q-item-label>
+                    </q-item-section>
+                    <q-item-section side>
+                      <q-icon name="info" color="amber"/>
+                    </q-item-section>
+                  </q-item>
+                </q-list>
+              </q-btn-dropdown>
+            </div>
+          </div>
+        </div>
+        <q-dialog v-model="fixed">
+          <q-card style="width: 80vw; max-width: 1200px; height: 100vh;">
+            <q-layout style="min-height: 100vh; display: flex; flex-direction: column;">
+              <q-header elevated>
+                <q-toolbar>
+                  <q-avatar>
+                    <img src="https://cdn.quasar.dev/logo-v2/svg/logo-mono-white.svg">
+                  </q-avatar>
+                  <q-toolbar-title>
+                    <strong>Chi tiết link mạng</strong>
+                  </q-toolbar-title>
+                </q-toolbar>
+              </q-header>
+
+              <div style="overflow-y: auto; flex-grow: 1; padding: 30px; max-height: calc(100vh - 100px);">
+                <q-card-section>
 
 
-                  >
 
-                  </q-input>
+                    <!-- Hàng 1 -->
+
+                    <q-row class="q-gutter-md flex-field">
+
+                      <q-col cols="4" class="flex-col">
+
+                        <q-input dense outlined readonly v-model="currentNetwork.tt" label="TT" :value="currentNetwork.tt || 'NA'" />
+
+                      </q-col>
+
+                      <q-col cols="8" class="flex-col">
+
+                        <q-input dense outlined readonly v-model="currentNetwork.ten_link_mang" label="Tên link mạng" :value="currentNetwork.ten_link_mang || 'NA'">
+                          <q-tooltip v-if="currentNetwork.ten_link_mang ">
+                            {{ currentNetwork.ten_link_mang }}
+                          </q-tooltip>
+                        </q-input>
+
+                      </q-col>
+
+                    </q-row>
 
 
-                </div>
+                    <!-- Hàng 2 -->
 
+                    <q-row class="q-gutter-md flex-field">
+
+                      <q-col cols="4" class="flex-col">
+
+                        <q-input dense outlined readonly v-model="currentNetwork.cap.value" label="Cáp" :value="currentNetwork.cap.value|| 'NA'" />
+
+                      </q-col>
+
+                      <q-col cols="8" class="flex-col">
+
+                        <q-input dense outlined readonly v-model="currentNetwork.trang_thai.value" label="Trạng thái" :value="currentNetwork.trang_thai.value || 'NA'" />
+
+                      </q-col>
+
+                    </q-row>
+
+
+                    <!-- Hàng 3 -->
+
+                    <q-row class="q-gutter-md flex-field">
+
+                      <q-col cols="4" class="flex-col">
+                        <q-input dense outlined readonly v-model="currentNetwork.bang_thong_link_mbps" label="Băng thông link (Mbps)" :value="currentNetwork.bang_thong_link_mbps || 'NA'" />
+
+                      </q-col>
+
+                      <q-col cols="8" class="flex-col">
+
+                        <q-input dense outlined readonly v-model="currentNetwork.ten_thiet_bi_diem_dau.value" label="Tên thiết bị điểm đầu" :value="currentNetwork.ten_thiet_bi_diem_dau.value || 'NA'" >
+                          <q-tooltip v-if="currentNetwork.ten_thiet_bi_diem_dau.value ">
+                            {{ currentNetwork.ten_thiet_bi_diem_dau.value }}
+                          </q-tooltip>
+                        </q-input>
+
+                      </q-col>
+
+                    </q-row>
+
+
+                    <!-- Hàng 4 -->
+
+                    <q-row class="q-gutter-md flex-field">
+
+                      <q-col cols="4" class="flex-col">
+
+                        <q-input dense outlined readonly v-model="currentNetwork.port_thiet_bi_diem_dau.value" label="Port thiết bị điểm đầu" :value="currentNetwork.port_thiet_bi_diem_dau.value || 'NA'" >
+                          <q-tooltip v-if="currentNetwork.port_thiet_bi_diem_dau.value ">
+                            {{ currentNetwork.port_thiet_bi_diem_dau.value }}
+                          </q-tooltip>
+                        </q-input>
+
+                      </q-col>
+
+                      <q-col cols="8" class="flex-col">
+
+                        <q-input dense outlined readonly v-model="currentNetwork.ten_thiet_bi_diem_cuoi.value" label="Tên thiết bị điểm cuối" :value="currentNetwork.ten_thiet_bi_diem_cuoi.value || 'NA'" >
+                          <q-tooltip v-if="currentNetwork.ten_thiet_bi_diem_cuoi.value ">
+                            {{ currentNetwork.ten_thiet_bi_diem_cuoi.value }}
+                          </q-tooltip>
+                        </q-input>
+
+                      </q-col>
+
+                    </q-row>
+                    <q-row class="q-gutter-md flex-field">
+
+                      <q-col cols="4" class="flex-col">
+
+                        <q-input dense outlined readonly v-model="currentNetwork.port_thiet_bi_diem_cuoi.value" label="Port thiết bị điểm cuối" :value="currentNetwork.port_thiet_bi_diem_cuoi.value || 'NA'" >
+                          <q-tooltip v-if="currentNetwork.port_thiet_bi_diem_cuoi.value ">
+                            {{ currentNetwork.port_thiet_bi_diem_cuoi.value }}
+                          </q-tooltip>
+                        </q-input>
+
+                      </q-col>
+
+                      <q-col cols="8" class="flex-col">
+
+                        <q-input dense outlined readonly v-model="currentNetwork.ten_odf_diem_dau " label="Tên ODF điểm đầu " :value="currentNetwork.ten_odf_diem_dau || 'NA'"/>
+
+
+
+                      </q-col>
+
+                    </q-row>
+                    <q-row class="q-gutter-md flex-field">
+
+                      <q-col cols="4" class="flex-col">
+
+                        <q-input dense outlined readonly v-model="currentNetwork.port_odf_diem_dau " label="Port ODF điểm đâù " :value="currentNetwork.port_odf_diem_dau  || 'NA'"/>
+
+
+                      </q-col>
+
+                      <q-col cols="8" class="flex-col">
+
+                        <q-input dense outlined readonly v-model="currentNetwork.tuyen_cap  " label="Tuyến cáp " :value="currentNetwork.tuyen_cap  || 'NA'"/>
+
+
+
+                      </q-col>
+
+                    </q-row>
+
+                    <q-row class="q-gutter-md flex-field">
+
+                      <q-col cols="4" class="flex-col">
+
+                        <q-input dense outlined readonly v-model="currentNetwork.khu_vuc.value" label="Khu vực"  :value="currentNetwork.khu_vuc.value  || 'NA'"/>
+
+                      </q-col>
+
+                      <q-col cols="8" class="flex-col">
+
+                        <q-input dense outlined readonly v-model="currentNetwork.dia_chi_diem_dau" label="Địa chỉ điểm đầu" :value="currentNetwork.dia_chi_diem_dau  || 'NA'"/>
+
+                      </q-col>
+
+                    </q-row>
+
+
+                    <!-- Hàng 5 -->
+
+                    <q-row class="q-gutter-md flex-field">
+
+                      <q-col cols="4" class="flex-col">
+
+                        <q-input dense outlined readonly v-model="currentNetwork.tinh_diem_dau.value" label="Tỉnh điểm đầu" :value="currentNetwork.tinh_diem_dau.value  || 'NA'"/>
+
+                      </q-col>
+
+                      <q-col cols="8" class="flex-col">
+
+                        <q-input dense outlined readonly v-model="currentNetwork.dia_chi_diem_cuoi" label="Địa chỉ điểm cuối" :value="currentNetwork.dia_chi_diem_cuoi  || 'NA'"/>
+
+                      </q-col>
+
+                    </q-row>
+
+
+                    <!-- Hàng 6 -->
+
+                    <q-row class="q-gutter-md flex-field">
+
+                      <q-col cols="4" class="flex-col">
+
+                        <q-input dense outlined readonly v-model="currentNetwork.tinh_diem_cuoi.value " label="Tỉnh điểm cuối" :value="currentNetwork.tinh_diem_cuoi.value  || 'NA'"/>
+
+                      </q-col>
+
+                      <q-col cols="8" class="flex-col">
+
+                        <q-input dense outlined readonly v-model="currentNetwork.ngay_up_link" label="Ngày up link"  :value="currentNetwork.ngay_up_link || 'NA'"/>
+
+                      </q-col>
+
+                    </q-row>
+
+
+                    <!-- Hàng 7 -->
+
+                    <q-row class="q-gutter-md flex-field">
+
+                      <q-col cols="4" class="flex-col">
+
+                        <q-input dense outlined readonly v-model="currentNetwork.ngay_huy_link" label="Ngày hủy link" :value="currentNetwork.ngay_huy_link || 'NA'"/>
+
+                      </q-col>
+
+                      <q-col cols="8" class="flex-col">
+
+                        <q-input dense outlined readonly v-model="currentNetwork.dau_moi_lien_he_doi_tac " label="Đầu mối liên hệ đối tác" :value="currentNetwork.dau_moi_lien_he_doi_tac  || 'NA'"/>
+
+
+                      </q-col>
+
+                    </q-row>
+
+
+                    <!-- Hàng 8 -->
+
+                    <q-row class="q-gutter-md flex-field">
+
+                      <q-col cols="4" class="flex-col">
+
+                        <q-input dense outlined readonly v-model="currentNetwork.thong_tin_ghi_chu " label="Thông tin ghi chú" :value="currentNetwork.thong_tin_ghi_chu  || 'NA'"/>
+
+                      </q-col>
+
+                      <q-col cols="8" class="flex-col">
+
+                        <q-input dense outlined readonly v-model="currentNetwork.phongban_up_link.value" label="Phòng/ban up link"  :value="currentNetwork.phongban_up_link  || 'NA'"/>
+
+                      </q-col>
+
+                    </q-row>
+
+
+
+                </q-card-section>
               </div>
-              <div class="column q-pa-sm">
-                <div class="row justify-between q-mb-sm">
-                  <div class="q-ml-sm  flex" style="color: black; align-items: center; font-weight: 700;">
-                    Cáp
+
+              <q-separator/>
+
+              <q-card-actions align="right">
+                <q-btn flat label="Đóng" color="primary" v-close-popup/>
+              </q-card-actions>
+            </q-layout>
+          </q-card>
+        </q-dialog>
+        <q-dialog v-model="dialogVisible">
+          <q-card style="width: 80vw; max-width: 1200px;">
+            <q-layout style="min-height: 0;">
+              <q-header elevated>
+                <q-toolbar>
+                  <q-avatar>
+                    <img src="https://cdn.quasar.dev/logo-v2/svg/logo-mono-white.svg">
+                  </q-avatar>
+                  <q-toolbar-title>
+                    <strong>Sửa link mạng</strong>
+                  </q-toolbar-title>
+                </q-toolbar>
+              </q-header>
+              <div style="overflow-y: auto; max-height: 70vh; padding: 20px">
+                <q-form class="form-grid">
+
+                  <div class="input-attribute">
+                    <strong>Tên Link Mạng <span class="important-fields">*</span> :</strong>
+                    <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled
+                             v-model="formData.ten_link_mang" clearable label="Chọn tên link mạng"/>
+                  </div>
+                  <div class="input-attribute">
+                    <strong>Cáp <span class="important-fields">*</span> :</strong>
+                    <q-select
+                      filled
+                      v-model="formData.cap"
+                      use-input
+                      hide-selected
+                      fill-input
+                      label="Chọn loại cáp"
+                      input-debounce="300"
+                      :options="cables"
+                      @filter="filterFn"
+                      clearable
+                      :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
+                    >
+                      <template v-slot:no-option>
+                        <q-item>
+                          <q-item-section class="text-grey">
+                            Không có giá trị phù hợp
+                          </q-item-section>
+                        </q-item>
+                      </template>
+                    </q-select>
+
+                  </div>
+                  <div class="input-attribute">
+                    <strong>Mạng <span class="important-fields">*</span> :</strong>
+                    <q-select
+                      filled
+                      v-model="formData.mang"
+                      use-input
+                      hide-selected
+                      fill-input
+                      label="Chọn loại mạng"
+                      clearable
+                      input-debounce="300"
+                      :options="networks"
+                      @filter="filterFnNetworks"
+                      :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
+                    >
+                      <template v-slot:no-option>
+                        <q-item>
+                          <q-item-section class="text-grey">
+                            Không có giá trị phù hợp
+                          </q-item-section>
+                        </q-item>
+                      </template>
+                    </q-select>
+
+                  </div>
+                  <div class="input-attribute">
+                    <strong>CID <span class="important-fields">*</span> : </strong>
+                    <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled clearable
+                             v-model="formData.cid" label="Chọn CID"/>
+                  </div>
+                  <div class="input-attribute"><strong>Trạng thái <span class="important-fields">*</span> :
+                  </strong>
+                    <q-select
+                      filled
+                      v-model="formData.trang_thai"
+                      use-input
+                      hide-selected
+                      fill-input
+                      label="Chọn trạng thái"
+                      clearable
+                      input-debounce="300"
+                      :options="status"
+                      @filter="filterFnStatus"
+                      :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
+                    >
+                      <template v-slot:no-option>
+                        <q-item>
+                          <q-item-section class="text-grey">
+                            Không có giá trị phù hợp
+                          </q-item-section>
+                        </q-item>
+                      </template>
+                    </q-select>
+                  </div>
+                  <div class="input-attribute"><strong>Băng thông link <span class="important-fields">*</span>
+                    :</strong>
+                    <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled clearable
+                             v-model="formData.bang_thong_link_mbps" label="Chọn Băng thông"/>
+                  </div>
+                  <div class="input-attribute"><strong>Tên thiết bị điểm đầu <span class="important-fields">*</span>
+                    : </strong>
+                    <q-select
+                      filled
+                      v-model="formData.ten_thiet_bi_diem_dau"
+                      use-input
+                      hide-selected
+                      fill-input
+                      label="Chọn TBDV"
+                      input-debounce="300"
+                      :options="device"
+                      @filter="filterFnDevice"
+                      @virtual-scroll="onScroll"
+                      clearable
+                      :loading="loading"
+                      :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
+                    >
+                      <template v-slot:no-option>
+                        <q-item>
+                          <q-item-section class="text-grey">
+                            Không có giá trị phù hợp
+                          </q-item-section>
+                        </q-item>
+                      </template>
+                    </q-select>
+                  </div>
+                  <div class="input-attribute"><strong>Port thiết bị điểm đầu <span
+                    class="important-fields">*</span> :
+                  </strong>
+                    <q-select
+                      filled
+                      v-model="formData.port_thiet_bi_diem_dau"
+                      use-input
+                      hide-selected
+                      fill-input
+                      label="Chọn Port thiết bị điểm đầu"
+                      clearable
+                      input-debounce="300"
+                      :options="port"
+                      @filter="filterFnPort"
+                      :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
+
+                    >
+                      <template v-slot:no-option>
+                        <q-item>
+                          <q-item-section class="text-grey">
+                            Không có giá trị phù hợp
+                          </q-item-section>
+                        </q-item>
+                      </template>
+                    </q-select>
+
+                  </div>
+                  <div class="input-attribute"><strong>Tên thiết bị điểm cuối <span
+                    class="important-fields">*</span> :</strong>
+                    <q-select
+                      filled
+                      v-model="formData.ten_thiet_bi_diem_cuoi"
+                      use-input
+                      hide-selected
+                      fill-input
+                      label="Chọn TBDC"
+                      input-debounce="300"
+                      :options="device"
+                      @filter="filterFnDevice"
+                      @virtual-scroll="onScroll"
+                      clearable
+                      :loading="loading"
+                      :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
+                    >
+                      <template v-slot:no-option>
+                        <q-item>
+                          <q-item-section class="text-grey">
+                            Không có giá trị phù hợp
+                          </q-item-section>
+                        </q-item>
+                      </template>
+                    </q-select>
                   </div>
 
-                  <q-select
-                    class="q-ml-sm select-filter"
-                    outlined
-                    dense
-                    v-model="filterTypeCable"
-                    :options="optionsCable"
+                  <div class="input-attribute"><strong>Port thiết bị điểm cuối <span
+                    class="important-fields">*</span> :</strong>
+                    <q-select
+                      filled
+                      v-model="formData.port_thiet_bi_diem_cuoi"
+                      use-input
+                      hide-selected
+                      fill-input
+                      label="Chọn Port thiết bị điểm cuoi"
+                      clearable
+                      input-debounce="300"
+                      :options="port"
+                      @filter="filterFnPort"
+                      :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
 
-                    emit-value
-                    map-options
-                  />
-                </div>
+                    >
+                      <template v-slot:no-option>
+                        <q-item>
+                          <q-item-section class="text-grey">
+                            Không có giá trị phù hợp
+                          </q-item-section>
+                        </q-item>
+                      </template>
+                    </q-select>
 
+                  </div>
+                  <div class="input-attribute"><strong>Tên ODF điểm đầu <span class="important-fields">*</span>
+                    :</strong>
+                    <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled clearable
+                             v-model="formData.ten_odf_diem_dau" label="ODF"/>
 
-                <div class="row">
-                  <q-select
-                    filled
-                    v-model="searchValueCable"
-                    use-input
-                    hide-selected
-                    fill-input
-                    label="Chọn loại cáp"
-                    input-debounce="300"
-                    :options="cables"
-                    @filter="filterFn"
-                    clearable
+                  </div>
+                  <div class="input-attribute"><strong>Port ODF điểm đâù <span class="important-fields">*</span>
+                    :</strong>
+                    <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled clearable
+                             v-model="formData.port_odf_diem_dau" label="Port ODF"/>
 
-                  >
-                    <template v-slot:no-option>
-                      <q-item>
-                        <q-item-section class="text-grey">
-                          Không có giá trị phù hợp
-                        </q-item-section>
-                      </q-item>
-                    </template>
-                  </q-select>
+                  </div>
+                  <div class="input-attribute"><strong>Tuyến cáp <span class="important-fields">*</span> :</strong>
+                    <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled clearable
+                             v-model="formData.tuyen_cap" label="Tuyến cáp"/>
 
-                </div>
+                  </div>
+                  <div class="input-attribute"><strong>Khu vực <span class="important-fields">*</span> :</strong>
+                    <q-select
+                      filled
+                      v-model="formData.khu_vuc"
+                      use-input
+                      hide-selected
+                      fill-input
+                      label="Chọn khu vực"
+                      clearable
+                      input-debounce="300"
+                      :options="areas"
+                      @filter="filterFnAreas"
+                      :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
 
+                    >
+                      <template v-slot:no-option>
+                        <q-item>
+                          <q-item-section class="text-grey">
+                            Không có giá trị phù hợp
+                          </q-item-section>
+                        </q-item>
+                      </template>
+                    </q-select>
+                  </div>
+                  <div class="input-attribute"><strong>Địa chỉ điểm đầu <span class="important-fields">*</span>
+                    :</strong>
+                    <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled clearable
+                             v-model="formData.dia_chi_diem_dau" label="Chọn địa chỉ điểm đầu"/>
+
+                  </div>
+                  <div class="input-attribute"><strong>Tỉnh điểm đầu <span class="important-fields">*</span>
+                    :</strong>
+                    <q-select
+                      filled
+                      v-model="formData.tinh_diem_dau"
+                      use-input
+                      hide-selected
+                      fill-input
+                      label="Chọn tỉnh điểm đâù"
+                      input-debounce="300"
+                      :options="province"
+                      @filter="filterFnProvince"
+                      @virtual-scroll="onScrollProvince"
+                      clearable
+                      :loading="loading"
+                      :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
+                    >
+                      <template v-slot:no-option>
+                        <q-item>
+                          <q-item-section class="text-grey">
+                            Không có giá trị phù hợp
+                          </q-item-section>
+                        </q-item>
+                      </template>
+                    </q-select>
+
+                  </div>
+                  <div class="input-attribute"><strong>Địa chỉ điểm cuối <span class="important-fields">*</span>
+                    :</strong>
+                    <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled clearable
+                             v-model="formData.dia_chi_diem_cuoi" label="Chọn địa chỉ điểm cuối"/>
+
+                  </div>
+                  <div class="input-attribute"><strong>Tỉnh điểm cuối <span class="important-fields">*</span>
+                    :</strong>
+                    <q-select
+                      filled
+                      v-model="formData.tinh_diem_cuoi"
+                      use-input
+                      hide-selected
+                      fill-input
+                      label="Chọn tỉnh điểm cuối"
+                      input-debounce="300"
+                      :options="province"
+                      @filter="filterFnProvince"
+                      @virtual-scroll="onScrollProvince"
+                      clearable
+                      :loading="loading"
+                      :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
+                    >
+                      <template v-slot:no-option>
+                        <q-item>
+                          <q-item-section class="text-grey">
+                            Không có giá trị phù hợp
+                          </q-item-section>
+                        </q-item>
+                      </template>
+                    </q-select>
+
+                  </div>
+                  <div class="input-attribute"><strong>CIDMA hợp đồng đối tác <span
+                    class="important-fields">*</span> :</strong>
+                    <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled clearable
+                             v-model="formData.cidma_hop_dong_doi_tac" label="Chọn CID/Hợp đồng đối tác"/>
+
+                  </div>
+                  <div class="input-attribute">
+                    <strong>Ngày up link:</strong>
+
+                    <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled
+                             v-model="formData.ngay_up_link" mask="##/##/####" clearable>
+                      <template v-slot:append>
+                        <q-icon name="event" class="cursor-pointer">
+                          <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                            <q-date v-model="formData.ngay_up_link" mask="DD/MM/YYYY">
+                              <div class="row items-center justify-end">
+                                <q-btn v-close-popup label="Close" color="primary" flat/>
+                              </div>
+                            </q-date>
+                          </q-popup-proxy>
+                        </q-icon>
+                      </template>
+                    </q-input>
+                  </div>
+
+                  <div class="input-attribute"><strong>Phòng ban up link <span class="important-fields">*</span>
+                    :</strong>
+
+                    <q-select
+                      filled
+                      v-model="formData.phongban_up_link"
+                      use-input
+                      hide-selected
+                      fill-input
+                      label="Chọn phòng ban up link"
+                      clearable
+                      input-debounce="300"
+                      :options="departments"
+                      @filter="filterFnDepartment"
+                      :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
+
+                    >
+                      <template v-slot:no-option>
+                        <q-item>
+                          <q-item-section class="text-grey">
+                            Không có giá trị phù hợp
+                          </q-item-section>
+                        </q-item>
+                      </template>
+                    </q-select>
+                  </div>
+                  <div class="input-attribute"><strong>Ngày hủy link <span class="important-fields">*</span>
+                    :</strong>
+                    <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled
+                             v-model="formData.ngay_huy_link" mask="##/##/####" clearable label="Chọn ngày hủy link">
+                      <template v-slot:append>
+                        <q-icon name="event" class="cursor-pointer">
+                          <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                            <q-date v-model="formData.ngay_huy_link" mask="DD/MM/YYYY">
+                              <div class="row items-center justify-end">
+                                <q-btn v-close-popup label="Close" color="primary" flat/>
+                              </div>
+                            </q-date>
+                          </q-popup-proxy>
+                        </q-icon>
+                      </template>
+                    </q-input>
+                  </div>
+                  <div class="input-attribute"><strong>Phòng ban hủy link <span class="important-fields">*</span>
+                    :</strong>
+                    <q-select
+                      filled
+                      v-model="formData.phongban_huy_link"
+                      use-input
+                      hide-selected
+                      fill-input
+                      label="Chọn phòng ban hủy link"
+                      clearable
+                      input-debounce="300"
+                      :options="departments"
+                      @filter="filterFnDepartment"
+
+                      :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
+                    >
+                      <template v-slot:no-option>
+                        <q-item>
+                          <q-item-section class="text-grey">
+                            Không có giá trị phù hợp
+                          </q-item-section>
+                        </q-item>
+                      </template>
+                    </q-select>
+
+                  </div>
+                  <div class="input-attribute"><strong>Đầu mối liên hệ đối tác <span
+                    class="important-fields">*</span> :</strong>
+                    <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled
+                             v-model="formData.dau_moi_lien_he_doi_tac" clearable
+                             label="Chọn đầu moi lien hệ đối tác"/>
+
+                  </div>
+                  <div class="input-attribute"><strong>Thông tin ghi chú <span class="important-fields">*</span>
+                    :</strong>
+                    <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled
+                             v-model="formData.thong_tin_ghi_chu" clearable label="Chọn thong tin ghi chú"/>
+
+                  </div>
+
+                </q-form>
               </div>
-              <div class="column q-pa-sm">
-                <div class="row justify-between q-mb-sm">
-                  <div class="q-ml-sm  flex" style="color: black; align-items: center;font-weight: 700;">
-                    Ngày up link
+            </q-layout>
+
+
+            <q-separator/>
+
+            <q-card-actions align="right">
+              <q-btn color="primary" label="Cập nhật" @click="updateLinkMang(formData._id)"/>
+
+              <q-btn flat label="Hủy" color="primary" v-close-popup/>
+            </q-card-actions>
+          </q-card>
+        </q-dialog>
+        <q-dialog v-model="confirmDialog.visible">
+          <q-card>
+
+
+            <q-card-section>
+              <q-avatar icon="delete" color="primary" text-color="white"/>
+              Bạn có chắc chắn muốn xóa mục này không?
+            </q-card-section>
+
+            <q-card-actions align="right">
+              <q-btn flat label="Hủy" color="primary" v-close-popup/>
+              <q-btn flat label="Xóa" color="red" @click="confirmDelete"/>
+            </q-card-actions>
+          </q-card>
+        </q-dialog>
+        <q-dialog v-model="created">
+          <q-card style="width: 80vw; max-width: 1200px;">
+            <q-layout style="min-height: 0;">
+              <q-header elevated>
+                <q-toolbar>
+                  <q-avatar>
+                    <img src="https://cdn.quasar.dev/logo-v2/svg/logo-mono-white.svg">
+                  </q-avatar>
+                  <q-toolbar-title>
+                    <strong>Thêm link mạng</strong>
+                  </q-toolbar-title>
+                </q-toolbar>
+              </q-header>
+              <div style="overflow-y: auto; max-height: 70vh; padding: 20px">
+                <q-form class="form-grid">
+                  <div class="input-attribute">
+                    <strong>Tên Link Mạng <span class="important-fields">*</span> :</strong>
+                    <q-input filled v-model="formData.ten_link_mang" clearable label="Chọn tên link mạng"
+                             :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"/>
                   </div>
 
-                  <q-select
-                    class="q-ml-sm select-filter"
-                    outlined
-                    dense
-                    v-model="filterTypeDate"
-                    :options="optionsDate"
-                    emit-value
-                    map-options
 
-                  />
+                  <div class="input-attribute">
+                    <strong>Cáp <span class="important-fields">*</span> :</strong>
+                    <q-select
+                      filled
+                      v-model="formData.cap"
+                      use-input
+                      hide-selected
+                      fill-input
+                      label="Chọn loại cáp"
+                      input-debounce="300"
+                      :options="cables"
+                      @filter="filterFn"
+                      clearable
+                      :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
+                    >
+                      <template v-slot:no-option>
+                        <q-item>
+                          <q-item-section class="text-grey">
+                            Không có giá trị phù hợp
+                          </q-item-section>
+                        </q-item>
+                      </template>
+                    </q-select>
+
+                  </div>
+
+                  <div class="input-attribute">
+                    <strong>Mạng <span class="important-fields">*</span> :</strong>
+                    <q-select
+                      filled
+                      v-model="formData.mang"
+                      use-input
+                      hide-selected
+                      fill-input
+                      label="Chọn loại mạng"
+
+                      input-debounce="300"
+                      :options="networks"
+                      @filter="filterFnNetworks"
+                      clearable
+                      :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
+                    >
+                      <template v-slot:no-option>
+                        <q-item>
+                          <q-item-section class="text-grey">
+                            Không có giá trị phù hợp
+                          </q-item-section>
+                        </q-item>
+                      </template>
+                    </q-select>
+
+                  </div>
+
+                  <div class="input-attribute">
+                    <strong>CID <span class="important-fields">*</span> :</strong>
+                    <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled v-model="formData.cid"
+                             clearable label="Chọn CID"/>
+                  </div>
+
+                  <div class="input-attribute"><strong>Trạng thái <span class="important-fields">*</span> :</strong>
+                    <q-select
+                      filled
+                      v-model="formData.trang_thai"
+                      use-input
+                      hide-selected
+                      fill-input
+                      label="Chọn trạng thái"
+                      clearable
+                      input-debounce="300"
+                      :options="status"
+                      @filter="filterFnStatus"
+                      :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
+                    >
+                      <template v-slot:no-option>
+                        <q-item>
+                          <q-item-section class="text-grey">
+                            Không có giá trị phù hợp
+                          </q-item-section>
+                        </q-item>
+                      </template>
+                    </q-select>
+                  </div>
+                  <div class="input-attribute"><strong>Băng thông link <span class="important-fields">*</span>
+                    :</strong>
+                    <q-input :rules="[
+    val => !!val || 'Đây là trường bắt buộc nhập',
+    val => val >= 0 || 'Vui lòng nhập số dương'
+  ]" filled v-model="formData.bang_thong_link_mbps" clearable label="Chọn Băng thông" type="number"
+
+                    />
+                  </div>
+                  <div class="input-attribute"><strong>Tên thiết bị điểm đầu <span class="important-fields">*</span> :
+                  </strong>
+                    <q-select
+                      filled
+                      v-model="formData.ten_thiet_bi_diem_dau"
+                      use-input
+                      hide-selected
+                      fill-input
+                      label="Chọn TBDV"
+                      input-debounce="300"
+                      :options="device"
+                      @filter="filterFnDevice"
+                      @virtual-scroll="onScroll"
+                      clearable
+                      :loading="loading"
+                      :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
+                    >
+                      <template v-slot:no-option>
+                        <q-item>
+                          <q-item-section class="text-grey">
+                            Không có giá trị phù hợp
+                          </q-item-section>
+                        </q-item>
+                      </template>
+                    </q-select>
+                  </div>
+                  <div class="input-attribute"><strong>Port thiết bị điểm đầu <span class="important-fields">*</span> :
+                  </strong>
+                    <q-select
+                      filled
+                      v-model="formData.port_thiet_bi_diem_dau"
+                      use-input
+                      hide-selected
+                      fill-input
+                      label="Chọn Port thiết bị điểm đầu"
+                      clearable
+                      input-debounce="300"
+                      :options="port"
+                      @filter="filterFnPort"
+                      :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
+
+                    >
+                      <template v-slot:no-option>
+                        <q-item>
+                          <q-item-section class="text-grey">
+                            Không có giá trị phù hợp
+                          </q-item-section>
+                        </q-item>
+                      </template>
+                    </q-select>
+
+                  </div>
+                  <div class="input-attribute"><strong>Tên thiết bị điểm cuối <span class="important-fields">*</span>
+                    :</strong>
+                    <q-select
+                      filled
+                      v-model="formData.ten_thiet_bi_diem_cuoi"
+                      use-input
+                      hide-selected
+                      fill-input
+                      label="Chọn TBDC"
+                      input-debounce="300"
+                      :options="device"
+                      @filter="filterFnDevice"
+                      @virtual-scroll="onScroll"
+                      clearable
+                      :loading="loading"
+                      :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
+                    >
+                      <template v-slot:no-option>
+                        <q-item>
+                          <q-item-section class="text-grey">
+                            Không có giá trị phù hợp
+                          </q-item-section>
+                        </q-item>
+                      </template>
+                    </q-select>
+                  </div>
+
+                  <div class="input-attribute"><strong>Port thiết bị điểm cuối <span class="important-fields">*</span>
+                    :</strong>
+                    <q-select
+                      filled
+                      v-model="formData.port_thiet_bi_diem_cuoi"
+                      use-input
+                      hide-selected
+                      fill-input
+                      label="Chọn Port thiết bị điểm cuoi"
+                      clearable
+                      input-debounce="300"
+                      :options="port"
+                      @filter="filterFnPort"
+                      :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
+
+                    >
+                      <template v-slot:no-option>
+                        <q-item>
+                          <q-item-section class="text-grey">
+                            Không có giá trị phù hợp
+                          </q-item-section>
+                        </q-item>
+                      </template>
+                    </q-select>
+
+                  </div>
+                  <div class="input-attribute"><strong>Tên ODF điểm đầu <span class="important-fields">*</span>
+                    :</strong>
+                    <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled
+                             v-model="formData.ten_odf_diem_dau" clearable label="ODF"/>
+
+                  </div>
+                  <div class="input-attribute"><strong>Port ODF điểm đâù <span class="important-fields">*</span>
+                    :</strong>
+                    <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled
+                             v-model="formData.port_odf_diem_dau" clearable label="Port ODF"/>
+
+                  </div>
+                  <div class="input-attribute"><strong>Tuyến cáp <span class="important-fields">*</span> :</strong>
+                    <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled
+                             v-model="formData.tuyen_cap"
+                             clearable label="Tuyến cáp"/>
+
+
+                  </div>
+                  <div class="input-attribute"><strong>Khu vực <span class="important-fields">*</span> :</strong>
+                    <q-select
+                      filled
+                      v-model="formData.khu_vuc"
+                      use-input
+                      hide-selected
+                      fill-input
+                      label="Chọn khu vực"
+
+                      input-debounce="300"
+                      :options="areas"
+                      @filter="filterFnAreas"
+                      clearable
+                      :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
+                    >
+                      <template v-slot:no-option>
+                        <q-item>
+                          <q-item-section class="text-grey">
+                            Không có giá trị phù hợp
+                          </q-item-section>
+                        </q-item>
+                      </template>
+                    </q-select>
+                  </div>
+                  <div class="input-attribute"><strong>Địa chỉ điểm đầu <span class="important-fields">*</span>
+                    :</strong>
+                    <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled
+                             v-model="formData.dia_chi_diem_dau" clearable label="Chọn địa chỉ điểm đầu"/>
+
+                  </div>
+                  <div class="input-attribute"><strong>Tỉnh điểm đầu <span class="important-fields">*</span> :</strong>
+                    <q-select
+                      filled
+                      v-model="formData.tinh_diem_dau"
+                      use-input
+                      hide-selected
+                      fill-input
+                      label="Chọn tỉnh điểm đâù"
+                      input-debounce="300"
+                      :options="province"
+                      @filter="filterFnProvince"
+                      @virtual-scroll="onScrollProvince"
+                      clearable
+                      :loading="loading"
+                      :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
+                    >
+                      <template v-slot:no-option>
+                        <q-item>
+                          <q-item-section class="text-grey">
+                            Không có giá trị phù hợp
+                          </q-item-section>
+                        </q-item>
+                      </template>
+                    </q-select>
+
+                  </div>
+                  <div class="input-attribute"><strong>Địa chỉ điểm cuối <span class="important-fields">*</span>
+                    :</strong>
+                    <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled
+                             v-model="formData.dia_chi_diem_cuoi" clearable label="Chọn địa chỉ điểm cuối"/>
+
+                  </div>
+                  <div class="input-attribute"><strong>Tỉnh điểm cuối <span class="important-fields">*</span> :</strong>
+                    <q-select
+                      filled
+                      v-model="formData.tinh_diem_cuoi"
+                      use-input
+                      hide-selected
+                      fill-input
+                      label="Chọn tỉnh điểm cuối"
+                      input-debounce="300"
+                      :options="province"
+                      @filter="filterFnProvince"
+                      @virtual-scroll="onScrollProvince"
+                      clearable
+                      :loading="loading"
+                      :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
+                    >
+                      <template v-slot:no-option>
+                        <q-item>
+                          <q-item-section class="text-grey">
+                            Không có giá trị phù hợp
+                          </q-item-section>
+                        </q-item>
+                      </template>
+                    </q-select>
+
+                  </div>
+                  <div class="input-attribute"><strong>CIDMA hợp đồng đối tác <span class="important-fields">*</span>
+                    :</strong>
+                    <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled
+                             v-model="formData.cidma_hop_dong_doi_tac" clearable label="Chọn CID/Hợp đồng đối tác"/>
+
+                  </div>
+                  <div class="input-attribute">
+                    <strong>Ngày up link <span class="important-fields">*</span> :</strong>
+
+                    <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled
+                             v-model="formData.ngay_up_link "
+                             mask="##/##/####" clearable label="Ngày up link">
+                      <template v-slot:append>
+                        <q-icon name="event" class="cursor-pointer">
+                          <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                            <q-date v-model="formData.ngay_up_link" mask="DD/MM/YYYY">
+                              <div class="row items-center justify-end">
+                                <q-btn v-close-popup label="Close" color="primary" flat/>
+                              </div>
+                            </q-date>
+                          </q-popup-proxy>
+                        </q-icon>
+                      </template>
+                    </q-input>
+                  </div>
+
+                  <div class="input-attribute"><strong>Phòng ban up link <span class="important-fields">*</span>
+                    :</strong>
+
+                    <q-select
+                      filled
+                      v-model="formData.phongban_up_link"
+                      use-input
+                      hide-selected
+                      fill-input
+                      label="Chọn phòng ban up link"
+                      clearable
+                      input-debounce="300"
+                      :options="departments"
+                      @filter="filterFnDepartment"
+                      :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
+
+                    >
+                      <template v-slot:no-option>
+                        <q-item>
+                          <q-item-section class="text-grey">
+                            Không có giá trị phù hợp
+                          </q-item-section>
+                        </q-item>
+                      </template>
+                    </q-select>
+                  </div>
+                  <div class="input-attribute">
+                    <strong>Ngày hủy link <span class="important-fields">*</span> :</strong>
+
+                    <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled
+                             v-model="formData.ngay_huy_link" mask="##/##/####" clearable label="Ngày hủy link">
+                      <template v-slot:append>
+                        <q-icon name="event" class="cursor-pointer">
+                          <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                            <q-date v-model="formData.ngay_huy_link" mask="DD/MM/YYYY">
+                              <div class="row items-center justify-end">
+                                <q-btn v-close-popup label="Close" color="primary" flat/>
+                              </div>
+                            </q-date>
+                          </q-popup-proxy>
+                        </q-icon>
+                      </template>
+                    </q-input>
+                  </div>
+                  <div class="input-attribute"><strong>Phòng ban hủy link <span class="important-fields">*</span>
+                    :</strong>
+                    <q-select
+                      filled
+                      v-model="formData.phongban_huy_link"
+                      use-input
+                      hide-selected
+                      fill-input
+                      label="Chọn phòng ban hủy link"
+                      clearable
+                      input-debounce="300"
+                      :options="departments"
+                      @filter="filterFnDepartment"
+                      :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
+                    >
+                      <template v-slot:no-option>
+                        <q-item>
+                          <q-item-section class="text-grey">
+                            Không có giá trị phù hợp
+                          </q-item-section>
+                        </q-item>
+                      </template>
+                    </q-select>
+
+                  </div>
+                  <div class="input-attribute"><strong>Đầu mối liên hệ đối tác <span class="important-fields">*</span>
+                    :</strong>
+                    <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled
+                             v-model="formData.dau_moi_lien_he_doi_tac" clearable label="Chọn đầu moi lien hệ đối tác"/>
+
+                  </div>
+                  <div class="input-attribute"><strong>Thông tin ghi chú <span class="important-fields">*</span>
+                    :</strong>
+                    <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled
+                             v-model="formData.thong_tin_ghi_chu" clearable label="Chọn thong tin ghi chú"/>
+
+                  </div>
+
+                </q-form>
+              </div>
+
+            </q-layout>
+
+            <q-separator/>
+
+            <q-card-actions align="right">
+              <q-btn label="Thêm mới" color="primary" @click="submitForm"/>
+
+              <q-btn flat label="Hủy" color="primary" v-close-popup/>
+            </q-card-actions>
+          </q-card>
+        </q-dialog>
+        <q-dialog v-model="search">
+          <q-card>
+            <q-card-section>
+              <q-form>
+                <div class="column q-pa-sm">
+                  <div class="row justify-between q-mb-sm">
+                    <div class="q-ml-sm flex" style="color: black; align-items: center;font-weight: 700;">
+                      Tên link mạng
+                    </div>
+
+                    <q-select
+                      class="q-ml-sm select-filter no-border search-filter"
+                      outlined
+                      dense
+                      v-model="filterTypeLink"
+                      :options="options"
+
+                      emit-value
+                      map-options
+                    />
+
+                  </div>
+
+
+                  <div class="row">
+                    <q-input
+                      class="col-md-6"
+                      filled
+                      v-model="searchValue"
+                      label="Nhập tên link mạng"
+                      clearable
+
+
+                    >
+
+                    </q-input>
+
+
+                  </div>
+
                 </div>
+                <div class="column q-pa-sm">
+                  <div class="row justify-between q-mb-sm">
+                    <div class="q-ml-sm  flex" style="color: black; align-items: center; font-weight: 700;">
+                      Cáp
+                    </div>
 
-                <div v-if="filterTypeDate === 'during'">
-                  <div class="row" style="gap:20px">
+                    <q-select
+                      class="q-ml-sm select-filter search-filter"
+                      outlined
+                      dense
+                      v-model="filterTypeCable"
+                      :options="optionsCable"
+
+                      emit-value
+                      map-options
+                    />
+                  </div>
+
+
+                  <div class="row">
+                    <q-select
+                      filled
+                      v-model="searchValueCable"
+                      use-input
+                      hide-selected
+                      fill-input
+                      label="Chọn loại cáp"
+                      input-debounce="300"
+                      :options="cables"
+                      @filter="filterFn"
+                      clearable
+
+                    >
+                      <template v-slot:no-option>
+                        <q-item>
+                          <q-item-section class="text-grey">
+                            Không có giá trị phù hợp
+                          </q-item-section>
+                        </q-item>
+                      </template>
+                    </q-select>
+
+                  </div>
+
+                </div>
+                <div class="column q-pa-sm">
+                  <div class="row justify-between q-mb-sm">
+                    <div class="q-ml-sm  flex" style="color: black; align-items: center;font-weight: 700;">
+                      Ngày up link
+                    </div>
+
+                    <q-select
+                      class="q-ml-sm select-filter search-filter"
+                      outlined
+                      dense
+                      v-model="filterTypeDate"
+                      :options="optionsDate"
+                      emit-value
+                      map-options
+
+                    />
+                  </div>
+
+                  <div v-if="filterTypeDate === 'during'">
+                    <div class="row" style="gap:20px">
+                      <q-input filled v-model="searchDate" mask="##/##/####" clearable>
+                        <template v-slot:append>
+                          <q-icon name="event" class="cursor-pointer">
+                            <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                              <q-date v-model="searchDate" mask="DD/MM/YYYY">
+                                <div class="row items-center justify-end">
+                                  <q-btn v-close-popup label="Close" color="primary" flat/>
+                                </div>
+                              </q-date>
+                            </q-popup-proxy>
+                          </q-icon>
+                        </template>
+                      </q-input>
+                      <q-input filled v-model="searchDate2" mask="##/##/####" clearable>
+                        <template v-slot:append>
+                          <q-icon name="event" class="cursor-pointer">
+                            <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                              <q-date v-model="searchDate2" mask="DD/MM/YYYY">
+                                <div class="row items-center justify-end">
+                                  <q-btn v-close-popup label="Close" color="primary" flat/>
+                                </div>
+                              </q-date>
+                            </q-popup-proxy>
+                          </q-icon>
+                        </template>
+                      </q-input>
+                    </div>
+                  </div>
+
+                  <div v-else>
                     <q-input filled v-model="searchDate" mask="##/##/####" clearable>
                       <template v-slot:append>
                         <q-icon name="event" class="cursor-pointer">
                           <q-popup-proxy cover transition-show="scale" transition-hide="scale">
                             <q-date v-model="searchDate" mask="DD/MM/YYYY">
                               <div class="row items-center justify-end">
-                                <q-btn v-close-popup label="Close" color="primary" flat/>
-                              </div>
-                            </q-date>
-                          </q-popup-proxy>
-                        </q-icon>
-                      </template>
-                    </q-input>
-                    <q-input filled v-model="searchDate2" mask="##/##/####" clearable>
-                      <template v-slot:append>
-                        <q-icon name="event" class="cursor-pointer">
-                          <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                            <q-date v-model="searchDate2" mask="DD/MM/YYYY">
-                              <div class="row items-center justify-end">
-                                <q-btn v-close-popup label="Close" color="primary" flat/>
+                                <q-btn v-close-popup label="close" color="primary" flat/>
                               </div>
                             </q-date>
                           </q-popup-proxy>
@@ -155,1188 +1411,259 @@
                   </div>
                 </div>
 
-                <div v-else>
-                  <q-input filled v-model="searchDate" mask="##/##/####" clearable>
-                    <template v-slot:append>
-                      <q-icon name="event" class="cursor-pointer">
-                        <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                          <q-date v-model="searchDate" mask="DD/MM/YYYY">
-                            <div class="row items-center justify-end">
-                              <q-btn v-close-popup label="close" color="primary" flat/>
-                            </div>
-                          </q-date>
-                        </q-popup-proxy>
-                      </q-icon>
-                    </template>
-                  </q-input>
-                </div>
-              </div>
-
-            </q-form>
+              </q-form>
 
 
-          </q-card-section>
+            </q-card-section>
 
-          <q-separator/>
+            <q-separator/>
 
-          <q-card-actions align="right">
-            <q-btn label="Tìm kiếm" color="primary" @click="searchNetworks"/>
+            <q-card-actions align="right">
+              <q-btn label="Tìm kiếm" color="primary" @click="searchNetworks"/>
 
-            <q-btn flat label="Hủy" color="primary" v-close-popup/>
-          </q-card-actions>
-        </q-card>
-      </q-dialog>
-      <q-input
-        v-model="searchValues"
-        borderless
-        dense
-        color="primary"
-        debounce="300"
-        placeholder="Search"
-        clearable
-      >
-        <template v-slot:append>
-          <q-icon name="search" @click="searchNetworks" style="cursor: pointer"/>
-        </template>
-      </q-input>
+              <q-btn flat label="Hủy" color="primary" v-close-popup/>
+            </q-card-actions>
+          </q-card>
+        </q-dialog>
+<!--        <div class="q-pa-md">-->
+<!--          <p v-if="isSearchTriggered===true">-->
+<!--            Kết quả tìm kiếm của-->
+<!--            <span v-if="searchDate && searchDate2">Ngày: {{ this.formatDates(searchDate) }} - {{ this.formatDates(searchDate2) }}</span>-->
+<!--            <span v-else-if="searchDate">Ngày: {{ this.formatDates(searchDate)}}</span>-->
+<!--            <span v-else-if="searchValue">Mạng: {{ searchValue }}</span>-->
+<!--            <span v-else-if="searchValueCable">Cáp: {{ searchValueCable.label }}</span>-->
+<!--          </p>-->
+<!--        </div>-->
+        <div class="q-pa-md">
+          <q-table
 
-    </div>
-    <q-dialog v-model="fixed">
-      <q-card style="width: 80vw; max-width: 1200px;">
-        <q-layout style="min-height: 0;">
-          <q-header elevated>
-            <q-toolbar>
-              <q-avatar>
-                <img src="https://cdn.quasar.dev/logo-v2/svg/logo-mono-white.svg">
-              </q-avatar>
-              <q-toolbar-title>
-                <strong>Chi tiết link mạng</strong>
-              </q-toolbar-title>
-            </q-toolbar>
-          </q-header>
-          <div style="overflow-y: auto; max-height: 70vh; padding: 30px">
+            ref="tableRef"
 
-            <div class="info-field"><strong>TT:</strong> {{ currentNetwork.tt ? currentNetwork.tt : 'NA' }}</div>
-            <div class="info-field"><strong>Tên Link Mạng:</strong>
-              {{ currentNetwork.ten_link_mang ? currentNetwork.ten_link_mang : 'NA' }}
-            </div>
-            <div class="info-field"><strong>Cáp:</strong> {{ currentNetwork.cap ? currentNetwork.cap.value : 'NA' }}
-            </div>
-            <div class="info-field"><strong>CID:</strong> {{ currentNetwork.cid ? currentNetwork.cid : 'NA' }}</div>
-            <div class="info-field"><strong>Trạng thái:</strong>
-              {{ currentNetwork.trang_thai ? currentNetwork.trang_thai.value : 'NA' }}
-            </div>
-            <div class="info-field"><strong>Băng thông link:</strong>
-              {{ currentNetwork.bang_thong_link_mbps ? currentNetwork.bang_thong_link_mbps : 'NA' }}
-            </div>
-            <div class="info-field"><strong>Tên thiết bị điểm đầu:</strong>
-              {{ currentNetwork.ten_thiet_bi_diem_dau ? currentNetwork.ten_thiet_bi_diem_dau.value : 'NA' }}
-            </div>
-            <div class="info-field"><strong>Port thiết bị điểm đầu:</strong>
-              {{ currentNetwork.port_thiet_bi_diem_dau ? currentNetwork.port_thiet_bi_diem_dau.value : 'NA' }}
-            </div>
-            <div class="info-field"><strong>Tên thiết bị điểm cuối:</strong>
-              {{ currentNetwork.ten_thiet_bi_diem_cuoi ? currentNetwork.ten_thiet_bi_diem_cuoi.value : 'NA' }}
-            </div>
-            <div class="info-field"><strong>Port thiết bị điểm cuối:</strong>
-              {{ currentNetwork.port_thiet_bi_diem_cuoi ? currentNetwork.port_thiet_bi_diem_cuoi.value : 'NA' }}
-            </div>
-            <div class="info-field"><strong>Tên ODF điểm đầu :</strong>
-              {{ currentNetwork.ten_odf_diem_dau ? currentNetwork.ten_odf_diem_dau : 'NA' }}
-            </div>
-            <div class="info-field"><strong>Port ODF điểm đâù :</strong>
-              {{ currentNetwork.port_odf_diem_dau ? currentNetwork.port_odf_diem_dau : 'NA' }}
-            </div>
-            <div class="info-field"><strong>Tuyến cáp:</strong>
-              {{ currentNetwork.tuyen_cap ? currentNetwork.tuyen_cap : 'NA' }}
-            </div>
-            <div class="info-field"><strong>Khu vực:</strong>
-              {{ currentNetwork.khu_vuc ? currentNetwork.khu_vuc.value : 'NA' }}
-            </div>
-            <div class="info-field"><strong>Địa chỉ điểm đầu:</strong>
-              {{ currentNetwork.dia_chi_diem_dau ? currentNetwork.dia_chi_diem_dau : '' }}
-            </div>
-            <div class="info-field"><strong>Tỉnh điểm đầu:</strong>
-              {{ currentNetwork.tinh_diem_dau ? currentNetwork.tinh_diem_dau.value : 'NA' }}
-            </div>
-            <div class="info-field"><strong>Địa chỉ điểm cuối:</strong>
-              {{ currentNetwork.dia_chi_diem_cuoi ? currentNetwork.dia_chi_diem_cuoi : 'NA' }}
-            </div>
-            <div class="info-field"><strong>Tỉnh điểm cuối:</strong>
-              {{ currentNetwork.tinh_diem_cuoi ? currentNetwork.tinh_diem_cuoi.value : 'NA' }}
-            </div>
-            <div class="info-field"><strong>CIDMA hợp đồng đối tác:</strong>
-              {{ currentNetwork.cidma_hop_dong_doi_tac ? currentNetwork.cidma_hop_dong_doi_tac : 'NA' }}
-            </div>
-            <div class="info-field"><strong>Ngày up link:</strong>
-              {{ currentNetwork.ngay_up_link ? formatDate(currentNetwork.ngay_up_link) : 'NA' }}
-            </div>
-            <div class="info-field"><strong>Phòng ban up link:</strong>
-              {{ currentNetwork.phongban_up_link ? currentNetwork.phongban_up_link.value : 'NA' }}
-            </div>
-            <div class="info-field"><strong>Ngày hủy link:</strong>
-              {{ currentNetwork.ngay_huy_link ? currentNetwork.ngay_huy_link : 'NA' }}
-            </div>
-            <div class="info-field"><strong>Phòng ban hủy link:</strong>
-              {{ currentNetwork.phongban_huy_link ? currentNetwork.phongban_huy_link : 'NA' }}
-            </div>
-            <div class="info-field"><strong>Đầu mối liên hệ đối tác:</strong>
-              {{ currentNetwork.dau_moi_lien_he_doi_tac ? currentNetwork.dau_moi_lien_he_doi_tac : 'NA' }}
-            </div>
-            <div class="info-field"><strong>Thông tin ghi chú:</strong>
-              {{ currentNetwork.thong_tin_ghi_chu ? currentNetwork.thong_tin_ghi_chu : 'NA' }}
-            </div>
+            v-model:pagination="pagination"
 
+            :rows="rows"
 
-          </div>
-          <q-separator/>
+            :columns="columns"
 
+            row-key="id"
 
-          <q-separator/>
+            separator="cell"
 
-          <q-card-actions align="right">
-            <q-btn flat label="Đóng" color="primary" v-close-popup/>
-          </q-card-actions>
-        </q-layout>
-      </q-card>
-    </q-dialog>
-    <q-dialog v-model="dialogVisible">
-      <q-card style="width: 80vw; max-width: 1200px;">
-        <q-layout style="min-height: 0;">
-          <q-header elevated>
-            <q-toolbar>
-              <q-avatar>
-                <img src="https://cdn.quasar.dev/logo-v2/svg/logo-mono-white.svg">
-              </q-avatar>
-              <q-toolbar-title>
-                <strong>Sửa link mạng</strong>
-              </q-toolbar-title>
-            </q-toolbar>
-          </q-header>
-          <div style="overflow-y: auto; max-height: 70vh; padding: 20px">
-            <q-form class="form-grid">
+            :selected-rows-label="getSelectedString"
 
-              <div class="input-attribute">
-                <strong>Tên Link Mạng <span class="important-fields">*</span> :</strong>
-                <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled
-                         v-model="formData.ten_link_mang" clearable label="Chọn tên link mạng"/>
-              </div>
-              <div class="input-attribute">
-                <strong>Cáp <span class="important-fields">*</span> :</strong>
-                <q-select
-                  filled
-                  v-model="formData.cap"
-                  use-input
-                  hide-selected
-                  fill-input
-                  label="Chọn loại cáp"
-                  input-debounce="300"
-                  :options="cables"
-                  @filter="filterFn"
-                  clearable
-                  :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
-                >
-                  <template v-slot:no-option>
-                    <q-item>
-                      <q-item-section class="text-grey">
-                        Không có giá trị phù hợp
-                      </q-item-section>
-                    </q-item>
-                  </template>
-                </q-select>
+            selection="multiple"
 
-              </div>
-              <div class="input-attribute">
-                <strong>Mạng <span class="important-fields">*</span> :</strong>
-                <q-select
-                  filled
-                  v-model="formData.mang"
-                  use-input
-                  hide-selected
-                  fill-input
-                  label="Chọn loại mạng"
-                  clearable
-                  input-debounce="300"
-                  :options="networks"
-                  @filter="filterFnNetworks"
-                  :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
-                >
-                  <template v-slot:no-option>
-                    <q-item>
-                      <q-item-section class="text-grey">
-                        Không có giá trị phù hợp
-                      </q-item-section>
-                    </q-item>
-                  </template>
-                </q-select>
+            :selected="selected"
 
-              </div>
-              <div class="input-attribute">
-                <strong>CID <span class="important-fields">*</span> : </strong>
-                <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled clearable
-                         v-model="formData.cid" label="Chọn CID"/>
-              </div>
-              <div class="input-attribute"><strong>Trạng thái <span class="important-fields">*</span> :
-              </strong>
-                <q-select
-                  filled
-                  v-model="formData.trang_thai"
-                  use-input
-                  hide-selected
-                  fill-input
-                  label="Chọn trạng thái"
-                  clearable
-                  input-debounce="300"
-                  :options="status"
-                  @filter="filterFnStatus"
-                  :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
-                >
-                  <template v-slot:no-option>
-                    <q-item>
-                      <q-item-section class="text-grey">
-                        Không có giá trị phù hợp
-                      </q-item-section>
-                    </q-item>
-                  </template>
-                </q-select>
-              </div>
-              <div class="input-attribute"><strong>Băng thông link <span class="important-fields">*</span>
-                :</strong>
-                <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled clearable
-                         v-model="formData.bang_thong_link_mbps" label="Chọn Băng thông"/>
-              </div>
-              <div class="input-attribute"><strong>Tên thiết bị điểm đầu <span class="important-fields">*</span>
-                : </strong>
-                <q-select
-                  filled
-                  v-model="formData.ten_thiet_bi_diem_dau"
-                  use-input
-                  hide-selected
-                  fill-input
-                  label="Chọn TBDV"
-                  input-debounce="300"
-                  :options="device"
-                  @filter="filterFnDevice"
-                  @virtual-scroll="onScroll"
-                  clearable
-                  :loading="loading"
-                  :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
-                >
-                  <template v-slot:no-option>
-                    <q-item>
-                      <q-item-section class="text-grey">
-                        Không có giá trị phù hợp
-                      </q-item-section>
-                    </q-item>
-                  </template>
-                </q-select>
-              </div>
-              <div class="input-attribute"><strong>Port thiết bị điểm đầu <span
-                class="important-fields">*</span> :
-              </strong>
-                <q-select
-                  filled
-                  v-model="formData.port_thiet_bi_diem_dau"
-                  use-input
-                  hide-selected
-                  fill-input
-                  label="Chọn Port thiết bị điểm đầu"
-                  clearable
-                  input-debounce="300"
-                  :options="port"
-                  @filter="filterFnPort"
-                  :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
+            @selection="onSelection"
+            class="q-mb-md custom-table"
+
+          >
+
+            <!-- Header -->
+
+            <template v-slot:header="props">
+
+              <q-tr :props="props">
+
+                <q-th auto-width>
+
+                  <q-checkbox
+
+                    v-model="props.selected"
+
+                    :indeterminate="props.indeterminate"
+
+                    @update:model="props.onToggle"
+
+                  />
+
+                </q-th>
+
+                <q-th
+
+                  v-for="column in props.cols"
+
+                  :key="column.name"
+
+                  @click="sortRows(column.field)"
+
+                  :class="{ sortable: true }"
 
                 >
-                  <template v-slot:no-option>
-                    <q-item>
-                      <q-item-section class="text-grey">
-                        Không có giá trị phù hợp
-                      </q-item-section>
-                    </q-item>
-                  </template>
-                </q-select>
 
-              </div>
-              <div class="input-attribute"><strong>Tên thiết bị điểm cuối <span
-                class="important-fields">*</span> :</strong>
-                <q-select
-                  filled
-                  v-model="formData.ten_thiet_bi_diem_cuoi"
-                  use-input
-                  hide-selected
-                  fill-input
-                  label="Chọn TBDC"
-                  input-debounce="300"
-                  :options="device"
-                  @filter="filterFnDevice"
-                  @virtual-scroll="onScroll"
-                  clearable
-                  :loading="loading"
-                  :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
-                >
-                  <template v-slot:no-option>
-                    <q-item>
-                      <q-item-section class="text-grey">
-                        Không có giá trị phù hợp
-                      </q-item-section>
-                    </q-item>
-                  </template>
-                </q-select>
-              </div>
+                  {{ column.label }}
 
-              <div class="input-attribute"><strong>Port thiết bị điểm cuối <span
-                class="important-fields">*</span> :</strong>
-                <q-select
-                  filled
-                  v-model="formData.port_thiet_bi_diem_cuoi"
-                  use-input
-                  hide-selected
-                  fill-input
-                  label="Chọn Port thiết bị điểm cuoi"
-                  clearable
-                  input-debounce="300"
-                  :options="port"
-                  @filter="filterFnPort"
-                  :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
+                  <span v-if="sort.field === column.field">
 
-                >
-                  <template v-slot:no-option>
-                    <q-item>
-                      <q-item-section class="text-grey">
-                        Không có giá trị phù hợp
-                      </q-item-section>
-                    </q-item>
-                  </template>
-                </q-select>
+              <i :class="sort.order === 'asc' ? 'fa-solid fa-arrow-up' : 'fa-solid fa-arrow-down'"></i>
 
-              </div>
-              <div class="input-attribute"><strong>Tên ODF điểm đầu <span class="important-fields">*</span>
-                :</strong>
-                <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled clearable
-                         v-model="formData.ten_odf_diem_dau" label="ODF"/>
+            </span>
 
-              </div>
-              <div class="input-attribute"><strong>Port ODF điểm đâù <span class="important-fields">*</span>
-                :</strong>
-                <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled clearable
-                         v-model="formData.port_odf_diem_dau" label="Port ODF"/>
+                </q-th>
 
-              </div>
-              <div class="input-attribute"><strong>Tuyến cáp <span class="important-fields">*</span> :</strong>
-                <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled clearable
-                         v-model="formData.tuyen_cap" label="Tuyến cáp"/>
-
-              </div>
-              <div class="input-attribute"><strong>Khu vực <span class="important-fields">*</span> :</strong>
-                <q-select
-                  filled
-                  v-model="formData.khu_vuc"
-                  use-input
-                  hide-selected
-                  fill-input
-                  label="Chọn khu vực"
-                  clearable
-                  input-debounce="300"
-                  :options="areas"
-                  @filter="filterFnAreas"
-                  :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
-
-                >
-                  <template v-slot:no-option>
-                    <q-item>
-                      <q-item-section class="text-grey">
-                        Không có giá trị phù hợp
-                      </q-item-section>
-                    </q-item>
-                  </template>
-                </q-select>
-              </div>
-              <div class="input-attribute"><strong>Địa chỉ điểm đầu <span class="important-fields">*</span>
-                :</strong>
-                <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled clearable
-                         v-model="formData.dia_chi_diem_dau" label="Chọn địa chỉ điểm đầu"/>
-
-              </div>
-              <div class="input-attribute"><strong>Tỉnh điểm đầu <span class="important-fields">*</span>
-                :</strong>
-                <q-select
-                  filled
-                  v-model="formData.tinh_diem_dau"
-                  use-input
-                  hide-selected
-                  fill-input
-                  label="Chọn tỉnh điểm đâù"
-                  input-debounce="300"
-                  :options="province"
-                  @filter="filterFnProvince"
-                  @virtual-scroll="onScrollProvince"
-                  clearable
-                  :loading="loading"
-                  :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
-                >
-                  <template v-slot:no-option>
-                    <q-item>
-                      <q-item-section class="text-grey">
-                        Không có giá trị phù hợp
-                      </q-item-section>
-                    </q-item>
-                  </template>
-                </q-select>
-
-              </div>
-              <div class="input-attribute"><strong>Địa chỉ điểm cuối <span class="important-fields">*</span>
-                :</strong>
-                <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled clearable
-                         v-model="formData.dia_chi_diem_cuoi" label="Chọn địa chỉ điểm cuối"/>
-
-              </div>
-              <div class="input-attribute"><strong>Tỉnh điểm cuối <span class="important-fields">*</span>
-                :</strong>
-                <q-select
-                  filled
-                  v-model="formData.tinh_diem_cuoi"
-                  use-input
-                  hide-selected
-                  fill-input
-                  label="Chọn tỉnh điểm cuối"
-                  input-debounce="300"
-                  :options="province"
-                  @filter="filterFnProvince"
-                  @virtual-scroll="onScrollProvince"
-                  clearable
-                  :loading="loading"
-                  :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
-                >
-                  <template v-slot:no-option>
-                    <q-item>
-                      <q-item-section class="text-grey">
-                        Không có giá trị phù hợp
-                      </q-item-section>
-                    </q-item>
-                  </template>
-                </q-select>
-
-              </div>
-              <div class="input-attribute"><strong>CIDMA hợp đồng đối tác <span
-                class="important-fields">*</span> :</strong>
-                <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled clearable
-                         v-model="formData.cidma_hop_dong_doi_tac" label="Chọn CID/Hợp đồng đối tác"/>
-
-              </div>
-              <div class="input-attribute">
-                <strong>Ngày up link:</strong>
-
-                <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled
-                         v-model="formData.ngay_up_link" mask="##/##/####" clearable>
-                  <template v-slot:append>
-                    <q-icon name="event" class="cursor-pointer">
-                      <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                        <q-date v-model="formData.ngay_up_link" mask="DD/MM/YYYY">
-                          <div class="row items-center justify-end">
-                            <q-btn v-close-popup label="Close" color="primary" flat/>
-                          </div>
-                        </q-date>
-                      </q-popup-proxy>
-                    </q-icon>
-                  </template>
-                </q-input>
-              </div>
-
-              <div class="input-attribute"><strong>Phòng ban up link <span class="important-fields">*</span>
-                :</strong>
-
-                <q-select
-                  filled
-                  v-model="formData.phongban_up_link"
-                  use-input
-                  hide-selected
-                  fill-input
-                  label="Chọn phòng ban up link"
-                  clearable
-                  input-debounce="300"
-                  :options="departments"
-                  @filter="filterFnDepartment"
-                  :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
-
-                >
-                  <template v-slot:no-option>
-                    <q-item>
-                      <q-item-section class="text-grey">
-                        Không có giá trị phù hợp
-                      </q-item-section>
-                    </q-item>
-                  </template>
-                </q-select>
-              </div>
-              <div class="input-attribute"><strong>Ngày hủy link <span class="important-fields">*</span>
-                :</strong>
-                <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled
-                         v-model="formData.ngay_huy_link" mask="##/##/####" clearable label="Chọn ngày hủy link">
-                  <template v-slot:append>
-                    <q-icon name="event" class="cursor-pointer">
-                      <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                        <q-date v-model="formData.ngay_huy_link" mask="DD/MM/YYYY">
-                          <div class="row items-center justify-end">
-                            <q-btn v-close-popup label="Close" color="primary" flat/>
-                          </div>
-                        </q-date>
-                      </q-popup-proxy>
-                    </q-icon>
-                  </template>
-                </q-input>
-              </div>
-              <div class="input-attribute"><strong>Phòng ban hủy link <span class="important-fields">*</span> :</strong>
-                <q-select
-                  filled
-                  v-model="formData.phongban_huy_link"
-                  use-input
-                  hide-selected
-                  fill-input
-                  label="Chọn phòng ban hủy link"
-                  clearable
-                  input-debounce="300"
-                  :options="departments"
-                  @filter="filterFnDepartment"
-
-                  :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
-                >
-                  <template v-slot:no-option>
-                    <q-item>
-                      <q-item-section class="text-grey">
-                        Không có giá trị phù hợp
-                      </q-item-section>
-                    </q-item>
-                  </template>
-                </q-select>
-
-              </div>
-              <div class="input-attribute"><strong>Đầu mối liên hệ đối tác <span
-                class="important-fields">*</span> :</strong>
-                <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled
-                         v-model="formData.dau_moi_lien_he_doi_tac" clearable
-                         label="Chọn đầu moi lien hệ đối tác"/>
-
-              </div>
-              <div class="input-attribute"><strong>Thông tin ghi chú <span class="important-fields">*</span>
-                :</strong>
-                <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled
-                         v-model="formData.thong_tin_ghi_chu" clearable label="Chọn thong tin ghi chú"/>
-
-              </div>
-
-            </q-form>
-          </div>
-        </q-layout>
-
-
-        <q-separator/>
-
-        <q-card-actions align="right">
-          <q-btn color="primary" label="Cập nhật" @click="updateLinkMang(formData._id)"/>
-
-          <q-btn flat label="Hủy" color="primary" v-close-popup/>
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
-    <q-dialog v-model="confirmDialog.visible">
-      <q-card>
-
-
-        <q-card-section>
-          <q-avatar icon="delete" color="primary" text-color="white"/>
-          Bạn có chắc chắn muốn xóa mục này không?
-        </q-card-section>
-
-        <q-card-actions align="right">
-          <q-btn flat label="Hủy" color="primary" v-close-popup/>
-          <q-btn flat label="Xóa" color="red" @click="confirmDelete"/>
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
-    <q-dialog v-model="created">
-      <q-card style="width: 80vw; max-width: 1200px;">
-        <q-layout style="min-height: 0;">
-          <q-header elevated>
-            <q-toolbar>
-              <q-avatar>
-                <img src="https://cdn.quasar.dev/logo-v2/svg/logo-mono-white.svg">
-              </q-avatar>
-              <q-toolbar-title>
-                <strong>Thêm link mạng</strong>
-              </q-toolbar-title>
-            </q-toolbar>
-          </q-header>
-          <div style="overflow-y: auto; max-height: 70vh; padding: 20px">
-            <q-form class="form-grid">
-              <div class="input-attribute">
-                <strong>Tên Link Mạng <span class="important-fields">*</span> :</strong>
-                <q-input filled v-model="formData.ten_link_mang" clearable label="Chọn tên link mạng"
-                         :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"/>
-              </div>
-
-
-              <div class="input-attribute">
-                <strong>Cáp <span class="important-fields">*</span> :</strong>
-                <q-select
-                  filled
-                  v-model="formData.cap"
-                  use-input
-                  hide-selected
-                  fill-input
-                  label="Chọn loại cáp"
-                  input-debounce="300"
-                  :options="cables"
-                  @filter="filterFn"
-                  clearable
-                  :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
-                >
-                  <template v-slot:no-option>
-                    <q-item>
-                      <q-item-section class="text-grey">
-                        Không có giá trị phù hợp
-                      </q-item-section>
-                    </q-item>
-                  </template>
-                </q-select>
-
-              </div>
-
-              <div class="input-attribute">
-                <strong>Mạng <span class="important-fields">*</span> :</strong>
-                <q-select
-                  filled
-                  v-model="formData.mang"
-                  use-input
-                  hide-selected
-                  fill-input
-                  label="Chọn loại mạng"
-
-                  input-debounce="300"
-                  :options="networks"
-                  @filter="filterFnNetworks"
-                  clearable
-                  :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
-                >
-                  <template v-slot:no-option>
-                    <q-item>
-                      <q-item-section class="text-grey">
-                        Không có giá trị phù hợp
-                      </q-item-section>
-                    </q-item>
-                  </template>
-                </q-select>
-
-              </div>
-
-              <div class="input-attribute">
-                <strong>CID <span class="important-fields">*</span> :</strong>
-                <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled v-model="formData.cid"
-                         clearable label="Chọn CID"/>
-              </div>
-
-              <div class="input-attribute"><strong>Trạng thái <span class="important-fields">*</span> :</strong>
-                <q-select
-                  filled
-                  v-model="formData.trang_thai"
-                  use-input
-                  hide-selected
-                  fill-input
-                  label="Chọn trạng thái"
-                  clearable
-                  input-debounce="300"
-                  :options="status"
-                  @filter="filterFnStatus"
-                  :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
-                >
-                  <template v-slot:no-option>
-                    <q-item>
-                      <q-item-section class="text-grey">
-                        Không có giá trị phù hợp
-                      </q-item-section>
-                    </q-item>
-                  </template>
-                </q-select>
-              </div>
-              <div class="input-attribute"><strong>Băng thông link <span class="important-fields">*</span> :</strong>
-                <q-input :rules="[
-    val => !!val || 'Đây là trường bắt buộc nhập',
-    val => val >= 0 || 'Vui lòng nhập số dương'
-  ]" filled v-model="formData.bang_thong_link_mbps" clearable label="Chọn Băng thông" type="number"
-
-                />
-              </div>
-              <div class="input-attribute"><strong>Tên thiết bị điểm đầu <span class="important-fields">*</span> :
-              </strong>
-                <q-select
-                  filled
-                  v-model="formData.ten_thiet_bi_diem_dau"
-                  use-input
-                  hide-selected
-                  fill-input
-                  label="Chọn TBDV"
-                  input-debounce="300"
-                  :options="device"
-                  @filter="filterFnDevice"
-                  @virtual-scroll="onScroll"
-                  clearable
-                  :loading="loading"
-                  :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
-                >
-                  <template v-slot:no-option>
-                    <q-item>
-                      <q-item-section class="text-grey">
-                        Không có giá trị phù hợp
-                      </q-item-section>
-                    </q-item>
-                  </template>
-                </q-select>
-              </div>
-              <div class="input-attribute"><strong>Port thiết bị điểm đầu <span class="important-fields">*</span> :
-              </strong>
-                <q-select
-                  filled
-                  v-model="formData.port_thiet_bi_diem_dau"
-                  use-input
-                  hide-selected
-                  fill-input
-                  label="Chọn Port thiết bị điểm đầu"
-                  clearable
-                  input-debounce="300"
-                  :options="port"
-                  @filter="filterFnPort"
-                  :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
-
-                >
-                  <template v-slot:no-option>
-                    <q-item>
-                      <q-item-section class="text-grey">
-                        Không có giá trị phù hợp
-                      </q-item-section>
-                    </q-item>
-                  </template>
-                </q-select>
-
-              </div>
-              <div class="input-attribute"><strong>Tên thiết bị điểm cuối <span class="important-fields">*</span>
-                :</strong>
-                <q-select
-                  filled
-                  v-model="formData.ten_thiet_bi_diem_cuoi"
-                  use-input
-                  hide-selected
-                  fill-input
-                  label="Chọn TBDC"
-                  input-debounce="300"
-                  :options="device"
-                  @filter="filterFnDevice"
-                  @virtual-scroll="onScroll"
-                  clearable
-                  :loading="loading"
-                  :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
-                >
-                  <template v-slot:no-option>
-                    <q-item>
-                      <q-item-section class="text-grey">
-                        Không có giá trị phù hợp
-                      </q-item-section>
-                    </q-item>
-                  </template>
-                </q-select>
-              </div>
-
-              <div class="input-attribute"><strong>Port thiết bị điểm cuối <span class="important-fields">*</span>
-                :</strong>
-                <q-select
-                  filled
-                  v-model="formData.port_thiet_bi_diem_cuoi"
-                  use-input
-                  hide-selected
-                  fill-input
-                  label="Chọn Port thiết bị điểm cuoi"
-                  clearable
-                  input-debounce="300"
-                  :options="port"
-                  @filter="filterFnPort"
-                  :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
-
-                >
-                  <template v-slot:no-option>
-                    <q-item>
-                      <q-item-section class="text-grey">
-                        Không có giá trị phù hợp
-                      </q-item-section>
-                    </q-item>
-                  </template>
-                </q-select>
-
-              </div>
-              <div class="input-attribute"><strong>Tên ODF điểm đầu <span class="important-fields">*</span> :</strong>
-                <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled
-                         v-model="formData.ten_odf_diem_dau" clearable label="ODF"/>
-
-              </div>
-              <div class="input-attribute"><strong>Port ODF điểm đâù <span class="important-fields">*</span>
-                :</strong>
-                <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled
-                         v-model="formData.port_odf_diem_dau" clearable label="Port ODF"/>
-
-              </div>
-              <div class="input-attribute"><strong>Tuyến cáp <span class="important-fields">*</span> :</strong>
-                <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled v-model="formData.tuyen_cap"
-                         clearable label="Tuyến cáp"/>
-
-
-              </div>
-              <div class="input-attribute"><strong>Khu vực <span class="important-fields">*</span> :</strong>
-                <q-select
-                  filled
-                  v-model="formData.khu_vuc"
-                  use-input
-                  hide-selected
-                  fill-input
-                  label="Chọn khu vực"
-
-                  input-debounce="300"
-                  :options="areas"
-                  @filter="filterFnAreas"
-                  clearable
-                  :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
-                >
-                  <template v-slot:no-option>
-                    <q-item>
-                      <q-item-section class="text-grey">
-                        Không có giá trị phù hợp
-                      </q-item-section>
-                    </q-item>
-                  </template>
-                </q-select>
-              </div>
-              <div class="input-attribute"><strong>Địa chỉ điểm đầu <span class="important-fields">*</span> :</strong>
-                <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled
-                         v-model="formData.dia_chi_diem_dau" clearable label="Chọn địa chỉ điểm đầu"/>
-
-              </div>
-              <div class="input-attribute"><strong>Tỉnh điểm đầu <span class="important-fields">*</span> :</strong>
-                <q-select
-                  filled
-                  v-model="formData.tinh_diem_dau"
-                  use-input
-                  hide-selected
-                  fill-input
-                  label="Chọn tỉnh điểm đâù"
-                  input-debounce="300"
-                  :options="province"
-                  @filter="filterFnProvince"
-                  @virtual-scroll="onScrollProvince"
-                  clearable
-                  :loading="loading"
-                  :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
-                >
-                  <template v-slot:no-option>
-                    <q-item>
-                      <q-item-section class="text-grey">
-                        Không có giá trị phù hợp
-                      </q-item-section>
-                    </q-item>
-                  </template>
-                </q-select>
-
-              </div>
-              <div class="input-attribute"><strong>Địa chỉ điểm cuối <span class="important-fields">*</span>
-                :</strong>
-                <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled
-                         v-model="formData.dia_chi_diem_cuoi" clearable label="Chọn địa chỉ điểm cuối"/>
-
-              </div>
-              <div class="input-attribute"><strong>Tỉnh điểm cuối <span class="important-fields">*</span> :</strong>
-                <q-select
-                  filled
-                  v-model="formData.tinh_diem_cuoi"
-                  use-input
-                  hide-selected
-                  fill-input
-                  label="Chọn tỉnh điểm cuối"
-                  input-debounce="300"
-                  :options="province"
-                  @filter="filterFnProvince"
-                  @virtual-scroll="onScrollProvince"
-                  clearable
-                  :loading="loading"
-                  :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
-                >
-                  <template v-slot:no-option>
-                    <q-item>
-                      <q-item-section class="text-grey">
-                        Không có giá trị phù hợp
-                      </q-item-section>
-                    </q-item>
-                  </template>
-                </q-select>
-
-              </div>
-              <div class="input-attribute"><strong>CIDMA hợp đồng đối tác <span class="important-fields">*</span>
-                :</strong>
-                <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled
-                         v-model="formData.cidma_hop_dong_doi_tac" clearable label="Chọn CID/Hợp đồng đối tác"/>
-
-              </div>
-              <div class="input-attribute">
-                <strong>Ngày up link <span class="important-fields">*</span> :</strong>
-
-                <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled
-                         v-model="formData.ngay_up_link "
-                         mask="##/##/####" clearable label="Ngày up link">
-                  <template v-slot:append>
-                    <q-icon name="event" class="cursor-pointer">
-                      <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                        <q-date v-model="formData.ngay_up_link" mask="DD/MM/YYYY">
-                          <div class="row items-center justify-end">
-                            <q-btn v-close-popup label="Close" color="primary" flat/>
-                          </div>
-                        </q-date>
-                      </q-popup-proxy>
-                    </q-icon>
-                  </template>
-                </q-input>
-              </div>
-
-              <div class="input-attribute"><strong>Phòng ban up link <span class="important-fields">*</span>
-                :</strong>
-
-                <q-select
-                  filled
-                  v-model="formData.phongban_up_link"
-                  use-input
-                  hide-selected
-                  fill-input
-                  label="Chọn phòng ban up link"
-                  clearable
-                  input-debounce="300"
-                  :options="departments"
-                  @filter="filterFnDepartment"
-                  :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
-
-                >
-                  <template v-slot:no-option>
-                    <q-item>
-                      <q-item-section class="text-grey">
-                        Không có giá trị phù hợp
-                      </q-item-section>
-                    </q-item>
-                  </template>
-                </q-select>
-              </div>
-              <div class="input-attribute">
-                <strong>Ngày hủy link <span class="important-fields">*</span> :</strong>
-
-                <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled
-                         v-model="formData.ngay_huy_link" mask="##/##/####" clearable label="Ngày hủy link">
-                  <template v-slot:append>
-                    <q-icon name="event" class="cursor-pointer">
-                      <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                        <q-date v-model="formData.ngay_huy_link" mask="DD/MM/YYYY">
-                          <div class="row items-center justify-end">
-                            <q-btn v-close-popup label="Close" color="primary" flat/>
-                          </div>
-                        </q-date>
-                      </q-popup-proxy>
-                    </q-icon>
-                  </template>
-                </q-input>
-              </div>
-              <div class="input-attribute"><strong>Phòng ban hủy link <span class="important-fields">*</span>
-                :</strong>
-                <q-select
-                  filled
-                  v-model="formData.phongban_huy_link"
-                  use-input
-                  hide-selected
-                  fill-input
-                  label="Chọn phòng ban hủy link"
-                  clearable
-                  input-debounce="300"
-                  :options="departments"
-                  @filter="filterFnDepartment"
-                  :rules="[val => !!val || 'Đây là trường bắt buộc nhập']"
-                >
-                  <template v-slot:no-option>
-                    <q-item>
-                      <q-item-section class="text-grey">
-                        Không có giá trị phù hợp
-                      </q-item-section>
-                    </q-item>
-                  </template>
-                </q-select>
-
-              </div>
-              <div class="input-attribute"><strong>Đầu mối liên hệ đối tác <span class="important-fields">*</span>
-                :</strong>
-                <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled
-                         v-model="formData.dau_moi_lien_he_doi_tac" clearable label="Chọn đầu moi lien hệ đối tác"/>
-
-              </div>
-              <div class="input-attribute"><strong>Thông tin ghi chú <span class="important-fields">*</span>
-                :</strong>
-                <q-input :rules="[val => !!val || 'Đây là trường bắt buộc nhập']" filled
-                         v-model="formData.thong_tin_ghi_chu" clearable label="Chọn thong tin ghi chú"/>
-
-              </div>
-
-            </q-form>
-          </div>
-
-        </q-layout>
-
-        <q-separator/>
-
-        <q-card-actions align="right">
-          <q-btn label="Thêm mới" color="primary" @click="submitForm"/>
-
-          <q-btn flat label="Hủy" color="primary" v-close-popup/>
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
-
-    <q-table
-
-      v-model:pagination="pagination"
-      :rows="rows"
-      :columns="columns"
-      row-key="index"
-      separator="cell"
-      sortable: true
-      class="q-mb-md custom-table "
-    >
-      <template v-slot:body="props">
-        <q-tr :props="props">
-          <q-td :props="props" v-for="column in columns" :key="column.name">
-            <template v-if="column.name === 'chiTiet'">
-
-              <q-btn color="primary" icon="info" @click="infoNetwork(props.row.id)">
-                <q-tooltip class="bg-indigo" :offset="[10, 10]">
-                  Chi tiết
-                </q-tooltip>
-
-              </q-btn>
+              </q-tr>
 
             </template>
-            <template v-if="column.name === 'sua'">
 
-              <q-btn color="pink" icon="edit" @click="showItem(props.row.id)">
-                <q-tooltip class="bg-indigo" :offset="[10, 10]">
-                  Sửa
-                </q-tooltip>
 
-              </q-btn>
+            <!-- Body -->
 
+            <template v-slot:body="props">
+              <q-tr>
+                <q-td auto-width>
+                  <q-checkbox v-model="props.selected"/>
+                </q-td>
+                <q-td v-for="column in columns" :key="column.name" :props="props">
+                  {{ props.row[column.field] }}
+                  <q-menu touch-position context-menu>
+                    <q-list dense style="min-width: 100px; padding: 10px">
+                      <q-item @click="infoNetwork(props.row.id)" clickable v-close-popup>
+                        <q-item-section avatar>
+                          <q-icon name="info" class="text-primary"/>
+                        </q-item-section>
+                        <q-item-section>Chi tiết</q-item-section>
+                      </q-item>
+                      <q-item @click="showItem(props.row.id)" clickable v-close-popup>
+                        <q-item-section avatar>
+                          <q-icon name="edit" class="text-primary"/>
+                        </q-item-section>
+                        <q-item-section>Sửa</q-item-section>
+                      </q-item>
+                      <q-item @click="openDeleteConfirm(props.row.id)" clickable v-close-popup>
+                        <q-item-section avatar>
+                          <q-icon name="delete" class="text-primary"/>
+                        </q-item-section>
+                        <q-item-section>Xóa</q-item-section>
+                      </q-item>
+                    </q-list>
+                  </q-menu>
+
+                </q-td>
+              </q-tr>
             </template>
-            <template v-if="column.name === 'xoa'">
-              <q-btn color="red" icon="delete" @click="openDeleteConfirm(props.row.id)">
+          </q-table>
 
-                <q-tooltip class="bg-indigo" :offset="[10, 10]">
-                  Xóa
-                </q-tooltip>
+        </div>
 
-              </q-btn>
-            </template>
-            <template v-else>
-              {{ props.row[column.field] }}
-            </template>
+        <q-page-sticky :offset="[38, 38]" style="position: fixed; right: -56px; bottom: 199px; z-index: 100;">
+          <q-fab style="width: 60px; height: fit-content;" icon="keyboard_arrow_left" direction="left" color="primary">
+            <div class="q-pa-md q-gutter-md">
+              <q-badge rounded color="orange" :label="getSelectedString()"/>
+            </div>
+            <q-fab-action @click="onClick('delete')" label="Xóa" label-position="left" external-label color="primary"
+                          icon="delete" class="icon-action"/>
+            <q-fab-action @click="onClick('info')" label="Chi tiết" label-position="left" external-label color="primary"
+                          icon="info" class="icon-action"/>
+            <q-fab-action @click="onClick('edit')" label="Chỉnh sửa" label-position="left" external-label
+                          color="primary" icon="edit" class="icon-action"/>
+          </q-fab>
+        </q-page-sticky>
 
-          </q-td>
-        </q-tr>
-      </template>
-    </q-table>
-
-    <div class="q-gutter-sm col-md-2"
-         style="display: flex; align-items: center; width: auto;justify-content: center;cursor: pointer;flex-wrap: wrap;">
-      <!--      nút chuyển về trang đầu-->
-      <!--        vô hiệu nút nếu đang ở trang 1-->
-      <button style="cursor: pointer"
-              class="q-btn q-btn-item q-btn--flat q-btn--round text-primary q-btn--actionable"
-              :disabled="pagination.page === 1"
-              @click="goToFirstPage"
-      >
-        <i class="material-icons">keyboard_double_arrow_left</i>
-      </button>
-      <!--      nút chuyển đến trang trước -->
-
-      <button style="cursor: pointer"
-              class="q-btn q-btn-item q-btn--flat q-btn--round text-primary q-btn--actionable"
-              :disabled="pagination.page === 1"
-              @click="goToPreviousPage"
-      >
-        <i class="material-icons">chevron_left</i>
-      </button>
-      <!--trang hiện tại-->
-      <div class="q-pagination row no-wrap items-center">
-        <div v-for="page in pageNumbers" :key="page">
+        <div class="q-gutter-sm col-md-2 pagination-container">
+          <!--      nút chuyển về trang đầu-->
+          <!--        vô hiệu nút nếu đang ở trang 1-->
           <button style="cursor: pointer"
-                  v-if="page !== '...'"
-                  class="q-btn q-btn-item"
-                  :class="{
+                  class="q-btn q-btn-item q-btn--flat q-btn--round text-primary q-btn--actionable"
+                  :disabled="pagination.page === 1"
+                  @click="goToFirstPage"
+          >
+            <i class="material-icons pagination-icon">keyboard_double_arrow_left</i>
+          </button>
+          <!--      nút chuyển đến trang trước -->
+
+          <button style="cursor: pointer"
+                  class="q-btn q-btn-item q-btn--flat q-btn--round text-primary q-btn--actionable"
+                  :disabled="pagination.page === 1"
+                  @click="goToPreviousPage"
+          >
+            <i class="material-icons pagination-icon">chevron_left</i>
+          </button>
+          <!--trang hiện tại-->
+          <div class="q-pagination row no-wrap items-center">
+            <div v-for="page in pageNumbers" :key="page">
+              <button style="cursor: pointer;font-size: 10px;font-weight: 700;
+  border-radius: 3px;"
+                      v-if="page !== '...'"
+                      class="q-btn q-btn-item"
+                      :class="{
         'bg-primary text-white': pagination.page === page,
         'text-primary': pagination.page !== page,
       }"
-                  @click="changePage(page)"
+                      @click="changePage(page)"
+              >
+                {{ page }}
+              </button>
+              <span v-else>...</span>
+            </div>
+          </div>
+          <!--nút chuyển đến trang sau-->
+          <!--      vô hiệu nếu đang ở trang cuối-->
+          <button style="cursor: pointer"
+                  class="q-btn q-btn-item q-btn--flat q-btn--round text-primary q-btn--actionable"
+                  :disabled="pagination.page === totalPages"
+                  @click="goToNextPage"
           >
-            {{ page }}
+            <i class="material-icons pagination-icon">chevron_right</i>
           </button>
-          <span v-else>...</span>
+          <!--nút chuyêển đến trang cuối cùng-->
+          <button style="cursor: pointer"
+                  class="q-btn q-btn-item q-btn--flat q-btn--round text-primary q-btn--actionable"
+                  :disabled="pagination.page === totalPages"
+                  @click="goToLastPage"
+          >
+            <i class="material-icons pagination-icon">keyboard_double_arrow_right</i>
+          </button>
+          <span style="font-size: 13px;">Trang</span>
+          <!--      ô hiển thị trang hiện tại và nhập số trang-->
+          <!--      min,max giới hạn chỉ có thể nhập số trong phạm vi từ 1 đến số trang cuối cùng.-->
+          <q-input
+            dense
+            type="number"
+            v-model.number="pagination.page"
+            :min="1"
+            :max="totalPages"
+            style="width: 50px;"
+            @change="fetchNetWorksList"
+          />
+
+          <!--chọn số lượng bản ghi muon hiển thị trên mỗi trang-->
+          <q-select
+            outlined
+            dense
+            v-model="pagination.rowsPerPage"
+            :options="[5, 10, 15, 20, 25, 50]"
+
+
+            @change="updateRowsPerPage"
+          />
         </div>
-      </div>
-      <!--nút chuyển đến trang sau-->
-      <!--      vô hiệu nếu đang ở trang cuối-->
-      <button style="cursor: pointer"
-              class="q-btn q-btn-item q-btn--flat q-btn--round text-primary q-btn--actionable"
-              :disabled="pagination.page === totalPages"
-              @click="goToNextPage"
-      >
-        <i class="material-icons">chevron_right</i>
-      </button>
-      <!--nút chuyêển đến trang cuối cùng-->
-      <button style="cursor: pointer"
-              class="q-btn q-btn-item q-btn--flat q-btn--round text-primary q-btn--actionable"
-              :disabled="pagination.page === totalPages"
-              @click="goToLastPage"
-      >
-        <i class="material-icons">keyboard_double_arrow_right</i>
-      </button>
-      <span>Trang</span>
-      <!--      ô hiển thị trang hiện tại và nhập số trang-->
-      <!--      min,max giới hạn chỉ có thể nhập số trong phạm vi từ 1 đến số trang cuối cùng.-->
-      <q-input
-        dense
-        type="number"
-        v-model.number="pagination.page"
-        :min="1"
-        :max="totalPages"
-        style="width: 50px;"
-        @change="fetchNetWorksList"
-      />
-      <span>trong {{ totalPages }}</span>
-      <!--chọn số lượng bản ghi muon hiển thị trên mỗi trang-->
-      <q-select
-        outlined
-        dense
-        v-model="pagination.rowsPerPage"
-        :options="[5, 10, 15, 20, 25, 50]"
-        label="Số bản ghi hiển thị"
-        style="width: 150px; margin-left: 20px;"
-        @change="updateRowsPerPage"
-      />
-    </div>
-  </div>
+
+      </q-page>
+    </q-page-container>
+  </q-layout>
+
 </template>
 
 <script>
 import axios from "axios";
+import {useQuasar} from "quasar";
 
 export default {
   name: "TableData",
   data() {
     return {
+      isSearchTriggered: false,
+      isSearchOpen: false,
+      selectedIds: null,
+      $q: useQuasar(),
+      selected: [],
+      lastIndex: null,
+      tableRef: null,
+      sort: {
+        field: null,
+        order: 'asc',
+      },
       searchValues: '',
       confirmDialog: {
         visible: false,
@@ -1457,35 +1784,33 @@ export default {
         rowsNumber: 0,
       },
       columns: [
-        {name: 'chiTiet', label: 'Chi Tiết', field: 'chiTiêt', align: 'center'},
-        {name: 'sua', label: 'Sửa', field: 'sua', align: 'center'},
-        {name: 'xoa', label: 'Xóa', field: 'xoa', align: 'center'},
-        {name: 'tt', label: 'TT', required: true, align: 'center', field: 'tt', sortable: true},
-        {name: 'tenLinkMang', label: 'Tên Link Mạng', field: 'tenLinkMang', sortable: true},
-        {name: 'cap', label: 'Cáp', field: 'cap', sortable: true},
-        {name: 'mang', label: 'Mạng', field: 'mang', sortable: true},
-        {name: 'cid', label: 'CID', field: 'cid', sortable: true},
-        {name: 'trangThai', label: 'Trạng thái', field: 'trangThai', sortable: true},
-        {name: 'bangThong', label: 'Băng Thông (Mbps)', field: 'bangThong'},
-        {name: 'tenThietBiDiemDau', label: 'Tên thiết bị điểm đầu', field: 'tenThietBiDiemDau'},
-        {name: 'portThietBiDiemDau', label: 'Port thiết bị điểm đầu', field: 'portThietBiDiemDau'},
-        {name: 'tenThietBiDiemCuoi', label: 'Tên thiết bị điểm cuối', field: 'tenThietBiDiemCuoi'},
-        {name: 'portThietBiDiemCuoi', label: 'Port thiết bị điểm cuối', field: 'portThietBiDiemCuoi'},
-        {name: 'tenOdfDiemDau', label: 'Tên ODF điểm đầu', field: 'tenOdfDiemDau'},
-        {name: 'portOdfDiemDau', label: 'Port ODF điểm đầu', field: 'portOdfDiemDau'},
-        {name: 'tuyenCap', label: 'Tuyến cáp', field: 'tuyenCap'},
-        {name: 'khuVuc', label: 'Khu vực', field: 'khuVuc'},
-        {name: 'diaChiDiemDau', label: 'Địa chỉ điểm đầu', field: 'diaChiDiemDau'},
-        {name: 'tinhDiemDau', label: 'Tỉnh điểm đầu', field: 'tinhDiemDau'},
-        {name: 'diaChiDiemCuoi', label: 'Địa chỉ điểm cuối', field: 'diaChiDiemCuoi'},
-        {name: 'tinhDiemCuoi', label: 'Tỉnh điểm cuối', field: 'tinhDiemCuoi'},
-        {name: 'cidmaHopDongDoiTac', label: 'CIDMA Hợp đồng đối tác', field: 'cidmaHopDongDoiTac'},
-        {name: 'ngayUpLink', label: 'Ngày up link', field: 'ngayUpLink', sortable: true},
-        {name: 'phongbanUpLink', label: 'Phòng ban up link', field: 'phongbanUpLink'},
-        {name: 'ngayHuyLink', label: 'Ngày hủy link', field: 'ngayHuyLink'},
-        {name: 'phongbanHuyLink', label: 'Phòng ban hủy link', field: 'phongbanHuyLink'},
-        {name: 'dauMoiLienHeDoiTac', label: 'Đầu mối liên hệ đối tác', field: 'dauMoiLienHeDoiTac'},
-        {name: 'ghiChu', label: 'Ghi chú', field: 'ghiChu'},
+
+        {name: 'tt', label: 'TT', required: true, align: 'left', field: 'tt'},
+        {name: 'tenLinkMang', label: 'Tên Link Mạng', field: 'tenLinkMang', align: 'left'},
+        {name: 'cap', label: 'Cáp', field: 'cap', align: 'left'},
+        {name: 'mang', label: 'Mạng', field: 'mang', align: 'left'},
+        {name: 'cid', label: 'CID', field: 'cid', align: 'left'},
+        {name: 'trangThai', label: 'Trạng thái', field: 'trangThai', align: 'left'},
+        {name: 'bangThong', label: 'Băng Thông (Mbps)', field: 'bangThong', align: 'left'},
+        {name: 'tenThietBiDiemDau', label: 'Tên thiết bị điểm đầu', field: 'tenThietBiDiemDau', align: 'left'},
+        {name: 'portThietBiDiemDau', label: 'Port thiết bị điểm đầu', field: 'portThietBiDiemDau', align: 'left'},
+        {name: 'tenThietBiDiemCuoi', label: 'Tên thiết bị điểm cuối', field: 'tenThietBiDiemCuoi', align: 'left'},
+        {name: 'portThietBiDiemCuoi', label: 'Port thiết bị điểm cuối', field: 'portThietBiDiemCuoi', align: 'left'},
+        {name: 'tenOdfDiemDau', label: 'Tên ODF điểm đầu', field: 'tenOdfDiemDau', align: 'left'},
+        {name: 'portOdfDiemDau', label: 'Port ODF điểm đầu', field: 'portOdfDiemDau', align: 'left'},
+        {name: 'tuyenCap', label: 'Tuyến cáp', field: 'tuyenCap', align: 'left'},
+        {name: 'khuVuc', label: 'Khu vực', field: 'khuVuc', align: 'left'},
+        {name: 'diaChiDiemDau', label: 'Địa chỉ điểm đầu', field: 'diaChiDiemDau', align: 'left'},
+        {name: 'tinhDiemDau', label: 'Tỉnh điểm đầu', field: 'tinhDiemDau', align: 'left'},
+        {name: 'diaChiDiemCuoi', label: 'Địa chỉ điểm cuối', field: 'diaChiDiemCuoi', align: 'left'},
+        {name: 'tinhDiemCuoi', label: 'Tỉnh điểm cuối', field: 'tinhDiemCuoi', align: 'left'},
+        {name: 'cidmaHopDongDoiTac', label: 'CIDMA Hợp đồng đối tác', field: 'cidmaHopDongDoiTac', align: 'left'},
+        {name: 'ngayUpLink', label: 'Ngày up link', field: 'ngayUpLink', align: 'left'},
+        {name: 'phongbanUpLink', label: 'Phòng ban up link', field: 'phongbanUpLink', align: 'left'},
+        {name: 'ngayHuyLink', label: 'Ngày hủy link', field: 'ngayHuyLink', align: 'left'},
+        {name: 'phongbanHuyLink', label: 'Phòng ban hủy link', field: 'phongbanHuyLink', align: 'left'},
+        {name: 'dauMoiLienHeDoiTac', label: 'Đầu mối liên hệ đối tác', field: 'dauMoiLienHeDoiTac', align: 'left'},
+        {name: 'ghiChu', label: 'Ghi chú', field: 'ghiChu', align: 'left'},
 
       ],
       rows: [],
@@ -1538,7 +1863,141 @@ export default {
     },
   },
   methods: {
-    handleCancel() {
+
+    toggleSearchBox() {
+      this.isSearchOpen = !this.isSearchOpen;
+      if (this.isSearchOpen) {
+        this.$nextTick(() => {
+          this.$refs.searchInput.focus(); // Tự động focus vào input khi mở
+        });
+      }
+     else {
+      this.fetchNetWorksList();
+    }
+    },
+    onClick(actionType) {
+      if (this.selectedIds === null) {
+        this.$q.notify({
+          color: 'negative',
+          position: 'top',
+          message: 'Vui lòng chọn ít nhất một hàng để thao tác!',
+          icon: 'warning',
+        });
+        return;
+      }
+
+      switch (actionType) {
+        case 'delete':
+          this.openDeleteConfirm(this.selectedIds);
+          break;
+        case 'info':
+          this.infoNetwork(this.selectedIds);
+          break;
+        case 'edit':
+          this.showItem(this.selectedIds);
+          break;
+        default:
+          break;
+      }
+    },
+
+    getSelectedString() {
+      const count = this.selected.length;
+      return count === 0
+        ? 'Đang chọn 0 bản ghi'
+        : `Đang chọn ${count} bản ghi`;
+    },
+    onSelection({rows, added, evt}) {
+      if (rows.length === 0 || this.tableRef === void 0) {
+        return;
+      }
+      console.log("hàng", rows);
+      if (rows.length > 0) {
+
+        // Lưu ID của hàng đầu tiên trong mảng rows
+
+        this.selectedIds = rows[0].id;
+
+      } else {
+
+        this.selectedId = null; // Nếu không có hàng nào được chọn, đặt lại thành null
+
+      }
+      console.log("ID là", this.selectedIds)
+      const row = rows[0];
+      const filteredSortedRows = this.tableRef.filteredSortedRows;
+      const rowIndex = filteredSortedRows.indexOf(row);
+      const localLastIndex = this.lastIndex;
+
+      this.lastIndex = rowIndex;
+      document.getSelection().removeAllRanges();
+
+      if (this.$q.platform.is.mobile === true) {
+        evt = {ctrlKey: true};
+      } else if (evt !== Object(evt) || (evt.shiftKey !== true && evt.ctrlKey !== true)) {
+        this.selected = added === true ? rows : [];
+        return;
+      }
+
+      const operateSelection = added === true
+        ? selRow => {
+          const selectedIndex = this.selected.indexOf(selRow);
+          if (selectedIndex === -1) {
+            this.selected = this.selected.concat(selRow);
+          }
+        }
+        : selRow => {
+          const selectedIndex = this.selected.indexOf(selRow);
+          if (selectedIndex > -1) {
+            this.selected = this.selected.slice(0, selectedIndex).concat(this.selected.slice(selectedIndex + 1));
+          }
+        };
+
+      if (localLastIndex === null || evt.shiftKey !== true) {
+        operateSelection(row);
+        return;
+      }
+
+      const from = localLastIndex < rowIndex ? localLastIndex : rowIndex;
+      const to = localLastIndex < rowIndex ? rowIndex : localLastIndex;
+      for (let i = from; i <= to; i += 1) {
+        operateSelection(filteredSortedRows[i]);
+      }
+    },
+    async showItem(networkId) {
+      try {
+        this.dialogVisible = true;
+        await this.infoEdit(networkId);
+        this.formData = {...this.currentNetwork};
+      } catch (error) {
+        console.error("Lỗi khi lấy thông tin mạng:", error);
+      }
+    },
+
+    sortRows(field) {
+      // Nếu người dùng nhấp vào cột khác
+      if (this.sort.field !== field) {
+        // Đặt cột trước đó về trạng thái tăng dần
+        if (this.sort.field) {
+          this.sort = {field: this.sort.field, order: 'asc'}; // Đặt cột cũ về tăng dần
+        }
+        // Thiết lập cột mới và đặt là tăng dần
+        this.sort = {field, order: 'asc'};
+      } else {
+        // Nếu nhấp vào cùng một cột, thay đổi thứ tự
+        this.sort.order = this.sort.order === 'asc' ? 'desc' : 'asc';
+      }
+
+      // Sắp xếp dữ liệu
+      this.rows.sort((a, b) => {
+        const aValue = a[field];
+        const bValue = b[field];
+
+        return this.sort.order === 'asc'
+          ? aValue - bValue
+          : bValue - aValue;
+      });
+    }, handleCancel() {
       this.fetchNetWorksList();
     },
     changePage(page) {
@@ -1782,15 +2241,6 @@ export default {
           return '<=';
         default:
           return '';
-      }
-    },
-    async showItem(networkId) {
-      try {
-        this.dialogVisible = true;
-        await this.infoEdit(networkId);
-        this.formData = {...this.currentNetwork};
-      } catch (error) {
-        console.error("Lỗi khi lấy thông tin mạng:", error);
       }
     },
     openDialog() {
@@ -2580,9 +3030,7 @@ export default {
             phongbanHuyLink: item.phongban_huy_link ? item.phongban_huy_link.value : '',
             dauMoiLienHeDoiTac: item.dau_moi_lien_he_doi_tac ? item.dau_moi_lien_he_doi_tac : '',
             thongTinGhiChu: item.thong_tin_ghi_chu ? item.thong_tin_ghi_chu : '',
-            chiTiet: item.chiTiet ? item.chiTiet : '',
-            xoa: item.xoa,
-            sua: item.sua
+
           }));
         }
       } catch (error) {
@@ -2710,6 +3158,8 @@ export default {
       console.log("Conditions:", conditions);
 
       await this.fetchNetWorksList(conditions);
+      this.isSearchTriggered = true;
+
     },
     async infoNetwork(networkId) {
       try {
@@ -2843,7 +3293,17 @@ export default {
         console.error('Lỗi khi xóa mạng:', error);
       }
     },
+    handleClickOutside(event) {
 
+      const menu = this.$el.querySelector('.context-menu');
+
+      if (menu && !menu.contains(event.target)) {
+
+        this.closeContextMenu();
+
+      }
+
+    },
 
     // ----------Phân trang-----------
 // chuyển đến trang đầu tiên
@@ -2884,9 +3344,17 @@ export default {
     'pagination.rowsPerPage': 'fetchNetWorksList',
     'pagination.page': 'fetchNetWorksList'
   }
-,
+  ,
   mounted() {
+    document.addEventListener('click', this.handleClickOutside);
+    this.tableRef = this.$refs.tableRef;
+
     this.fetchNetWorksList();
+
+  },
+  beforeUnmount() {
+
+    document.removeEventListener('click', this.handleClickOutside);
 
   },
 };
@@ -2894,9 +3362,76 @@ export default {
 </script>
 <style src="../css/reset.css"></style>
 <style>
-.q-field__native.row.items-center > span {
-  color: #009879;
+.search-filter .q-field__control::before {
+  border: none;
+  transition: border-color 0.36s cubic-bezier(0.4, 0, 0.2, 1);
 }
+.q-pa-md {
+  padding: 8px;
+}
+.pagination-container .q-field__control::before, .q-field__control::after {
+  content: none;
+  position: static;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  pointer-events: none;
+}
+.q-btn.q-btn-item.text-primary::before{
+  box-shadow: none;
+}
+.pagination-icon{
+  font-size: 1.715em;
+}
+.flex-col{
+  width: 50%;
+
+}
+
+.flex-field{
+  display: flex;
+  margin: 30px auto;
+  gap: 20px;
+}
+.search-input .q-field__control {
+  color: transparent;
+}
+
+
+.search-input .q-field__inner .q-field__control::before,
+.search-input .q-field__inner .q-field__control:hover::before {
+  border-bottom: none;
+  transition: border-color 0.36s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.q-mr-sm:hover {
+  border-radius: 50%;
+  background: #EEEEEE;
+  width: 40px;
+}
+
+.flex.inline {
+  display: inline-flex;
+  flex-direction: column;
+}
+
+thead {
+  background: #EEE !important;
+}
+
+.q-td.q-table--col-auto-width {
+  text-align: center !important;
+}
+
+.custom-table .q-td {
+  padding: 8px;
+}
+
+.q-table thead tr, .q-table tbody td {
+  height: fit-content;
+}
+
 
 .q-gutter-md.row.items-start {
   display: flex;
@@ -2904,6 +3439,11 @@ export default {
   align-content: center;
   gap: 10px
 
+}
+
+.sortable > span {
+  font-weight: 700;
+  color: #fff;
 }
 
 @media (max-width: 768px) {
@@ -2931,14 +3471,7 @@ export default {
   line-height: 2.5rem;
 }
 
-.q-field--outlined .q-field__control::before {
-  border: 1px solid transparent !important;
-}
 
-.q-field--outlined .q-field__control::after {
-
-  border: none;
-}
 
 .row.justify-between.q-mb-sm {
   display: flex;
@@ -2967,14 +3500,6 @@ h1 {
   color: red;
 }
 
-.container {
-  width: 1180px;
-  margin: 50px auto;
-  max-width: calc(100% - 20px);
-  display: flex;
-  flex-direction: column;
-  gap: 30px;
-}
 
 .form-grid {
   display: grid;
@@ -2983,29 +3508,14 @@ h1 {
   margin: 50px auto;
 }
 
-.text-right {
-  text-align: center;
-}
 
 .q-table thead {
-  background-color: #009879;
-  color: #ffffff;
+
   position: sticky;
   top: 0;
   z-index: 1;
 }
 
-.q-table th {
-  color: #ffffff;
-  text-align: center;
-  font-size: 15px;
-  font-weight: 700;
-}
-
-.q-table th, .q-table td {
-  padding: 20px;
-  background-color: inherit;
-}
 
 html {
   font-size: 62.5%;
@@ -3022,6 +3532,12 @@ body {
   padding: 3px;
 }
 
+.q-table th.sortable {
+  cursor: pointer;
+  padding: 15px 10px;
+  text-align: left;
+}
+
 .q-pagination {
   gap: 5px;
 }
@@ -3030,11 +3546,16 @@ body {
   display: none;
 }
 
+.icon-action {
+  width: 40px;
+  border-radius: 50%;
+}
 
-thead > tr {
-  font-size: 12px;
-  font-weight: 700;
-  color: red;
+.q-table th {
+  font-weight: 500;
+  font-size: 13px;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .custom-table .q-td {
@@ -3048,25 +3569,55 @@ thead > tr {
 }
 
 
-.custom-table .q-tr:hover {
-
-  background-color: transparent;
-
-}
-
-.q-mb-md.custom-table tbody tr:nth-of-type(even) {
-  font-weight: bold;
-  color: #009879;
-}
-
-.q-mb-md.custom-table tbody tr:last-of-type {
-  border-bottom: 2px solid #009879;
-}
-
 .q-mb-md {
-  height: 70vh;
+  height: 78vh;
   overflow: auto;
 }
+
+.pagination-container {
+  display: flex;
+  align-items: center;
+  width: auto;
+  justify-content: start;
+  cursor: pointer;
+  flex-wrap: wrap;
+}
+
+.text-h6 {
+  font-size: 2.25rem;
+  font-weight: 500;
+  line-height: 2rem;
+  letter-spacing: 0.0125em;
+}
+.q-gutter-md > * {
+  margin-left: 0px;
+}
+@media (max-width: 768px) {
+  .pagination-container {
+    justify-content: center;
+  }
+  .flex-field{
+    flex-wrap: wrap;
+  }
+  .flex-col{
+    width: 100%;
+  }
+
+}
+
+@media (max-width: 550px) {
+  .search-input{
+    width: 30%;
+  }
+  .header-contaniner {
+    flex-direction: column;
+  }
+  header-col-2,
+  .header-col-1 {
+    align-self: start;
+  }
+}
+
 
 </style>
 

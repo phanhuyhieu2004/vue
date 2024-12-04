@@ -8,6 +8,8 @@
 
 
 import {defineComponent} from "vue";
+
+import TestData from "components/TestData.vue";
 import TableData from "components/TableData.vue";
 
 
