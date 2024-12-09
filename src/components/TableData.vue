@@ -299,7 +299,7 @@
 
                       <q-col cols="8" class="flex-col">
 
-                        <q-input dense outlined readonly v-model="currentNetwork.ngay_up_link" label="Ngày up link"  :value="currentNetwork.ngay_up_link || 'NA'"/>
+                        <q-input dense outlined readonly v-model="formattedNgayUpLink" label="Ngày up link"  />
 
                       </q-col>
 
@@ -312,7 +312,7 @@
 
                       <q-col cols="4" class="flex-col">
 
-                        <q-input dense outlined readonly v-model="currentNetwork.ngay_huy_link" label="Ngày hủy link" :value="currentNetwork.ngay_huy_link || 'NA'"/>
+                        <q-input dense outlined readonly v-model="formattedNgayHuyLink" label="Ngày hủy link" />
 
                       </q-col>
 
@@ -1517,6 +1517,8 @@
                 <q-td v-for="column in columns" :key="column.name" :props="props">
                   {{ props.row[column.field] }}
                   <q-menu touch-position context-menu>
+<!--                    touch-position: Định vị menu tại vị trí touch (dành cho thiết bị di động).-->
+<!--                    context-menu: Kích hoạt menu ngữ cảnh khi nhấn chuột phải.-->
                     <q-list dense style="min-width: 100px; padding: 10px">
                       <q-item @click="infoNetwork(props.row.id)" clickable v-close-popup>
                         <q-item-section avatar>
@@ -1580,7 +1582,7 @@
             <i class="material-icons pagination-icon">chevron_left</i>
           </button>
           <!--trang hiện tại-->
-          <div class="q-pagination row no-wrap items-center">
+          <div class="q-pagination row no-wrap items-center pagination-current">
             <div v-for="page in pageNumbers" :key="page">
               <button style="cursor: pointer;font-size: 10px;font-weight: 700;
   border-radius: 3px;"
@@ -1614,16 +1616,15 @@
           >
             <i class="material-icons pagination-icon">keyboard_double_arrow_right</i>
           </button>
-          <span style="font-size: 13px;">Trang</span>
+          <span style="font-size: 13px;" class="pagination-page">Trang</span>
           <!--      ô hiển thị trang hiện tại và nhập số trang-->
           <!--      min,max giới hạn chỉ có thể nhập số trong phạm vi từ 1 đến số trang cuối cùng.-->
           <q-input
-            dense
             type="number"
             v-model.number="pagination.page"
             :min="1"
             :max="totalPages"
-            style="width: 50px;"
+            class="pagination-input"
             @change="fetchNetWorksList"
           />
 
@@ -1817,18 +1818,30 @@ export default {
     };
   },
   computed: {
+    formattedNgayUpLink() {
+      return this.currentNetwork.ngay_up_link
+        ? this.formatDate(this.currentNetwork.ngay_up_link)
+        : "NA";
+    },
+    formattedNgayHuyLink() {
+      return this.currentNetwork.ngay_huy_link
+        ? this.formatDate(this.currentNetwork.ngay_huy_link)
+        : "NA";
+    },
     pageNumbers() {
+      // Tổng số trang:Tổng so bản ghi / số lượng bản ghi mỗi trang
       const totalPages = this.totalPages;
       const currentPage = this.pagination.page;
       const maxVisiblePages = 5; // Số trang hiển thị tối đa trong thanh phân trang
       const pages = [];
-
+// Nếu tổng số trang nhỏ hơn hoặc bằng số trang hiển thị tối đa tren thanh phân trang
       if (totalPages <= maxVisiblePages) {
         // Hiển thị tất cả các trang nếu số trang nhỏ hơn maxVisiblePages
         for (let i = 1; i <= totalPages; i++) {
           pages.push(i);
         }
       } else {
+        // Khi người dùng đang ở các trang đầu tiên (1, 2, 3), hệ thống sẽ hiển thị một nhóm các trang bắt đầu từ 1.
         if (currentPage <= 3) {
           // Trang đầu: Hiển thị 1, 2, 3, ..., n
           for (let i = 1; i <= maxVisiblePages - 1; i++) {
@@ -1836,14 +1849,16 @@ export default {
           }
           pages.push("...");
           pages.push(totalPages);
-        } else if (currentPage >= totalPages - 2) {
+        }
+        else if (currentPage >= totalPages - 2) {
           // Trang cuối: Hiển thị 1, ..., n-2, n-1, n
           pages.push(1);
           pages.push("...");
           for (let i = totalPages - (maxVisiblePages - 2); i <= totalPages; i++) {
             pages.push(i);
           }
-        } else {
+        }
+        else {
           // Ở giữa: Hiển thị 1, ..., x-1, x, x+1, ..., n
           pages.push(1);
           pages.push("...");
@@ -1885,7 +1900,7 @@ export default {
         });
         return;
       }
-
+      // Dựa vào tham số actionType, thực hiện một trong các hành động:
       switch (actionType) {
         case 'delete':
           this.openDeleteConfirm(this.selectedIds);
@@ -1907,6 +1922,9 @@ export default {
         ? 'Đang chọn 0 bản ghi'
         : `Đang chọn ${count} bản ghi`;
     },
+    // Tham số rows: Mảng chứa các hàng hiện đang được chọn.
+    // Tham số added: Xác định xem hàng vừa được thêm vào hay bị bỏ chọn.
+    // Tham số evt: Sự kiện của trình duyệt khi nhấp chuột hoặc dùng bàn phím.
     onSelection({rows, added, evt}) {
       if (rows.length === 0 || this.tableRef === void 0) {
         return;
@@ -3040,7 +3058,7 @@ export default {
     },
     async searchNetworks() {
       const operator = this.getOperator(this.filterTypeLink);
-      console.log("toán tử được trả về là", this.filterTypeLink);
+      console.log("toán tử được trả về là", operator);
       const operatorCables = this.getOperatorCable(this.filterTypeCable);
       const operatorDate = this.getOperatorDate(this.filterTypeDate);
       if (!operator) {
@@ -3612,9 +3630,19 @@ body {
   .header-contaniner {
     flex-direction: column;
   }
-  header-col-2,
+  .header-col-2,
   .header-col-1 {
     align-self: start;
+    flex-wrap: nowrap;
+  }
+  .pagination-current{
+    display: none;
+  }
+  .pagination-page{
+    display: none;
+  }
+  .pagination-input{
+    display: none;
   }
 }
 
