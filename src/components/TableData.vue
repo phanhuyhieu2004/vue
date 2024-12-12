@@ -1652,6 +1652,7 @@ import {useQuasar} from "quasar";
 
 export default {
   name: "TableData",
+
   data() {
     return {
       isSearchTriggered: false,
@@ -1984,11 +1985,21 @@ export default {
     },
     async showItem(networkId) {
       try {
+        this.$q.loading.show({
+          message: "Đang tạo file. Vui lòng đợi chút",
+        });
+
+        // Tạo độ trễ để loading hiển thị trước khi thực hiện các thao tác khác
+        await new Promise((resolve) => setTimeout(resolve, 1000)); // Hiển thị loading trong 1 giây
+
         this.dialogVisible = true;
+
         await this.infoEdit(networkId);
-        this.formData = {...this.currentNetwork};
+        this.formData = { ...this.currentNetwork };
       } catch (error) {
         console.error("Lỗi khi lấy thông tin mạng:", error);
+      } finally {
+        this.$q.loading.hide(); // Ẩn loading sau khi hoàn tất các thao tác
       }
     },
 
